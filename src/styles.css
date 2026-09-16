@@ -504,6 +504,11 @@ h3,
   animation: avatarListen 2.2s ease-in-out infinite;
 }
 
+.avatar-mouth,
+.avatar-body {
+  transform-box: fill-box;
+}
+
 .avatar-stage--speaking .avatar-mouth {
   animation: avatarSpeak 0.34s ease-in-out infinite alternate;
   transform-origin: center;

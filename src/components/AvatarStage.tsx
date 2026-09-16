@@ -109,27 +109,52 @@ export function AvatarStage({
             <div className="avatar-portrait">
               <svg className="vera-avatar" viewBox="0 0 360 410">
                 <defs>
-                  <linearGradient id="vera-jacket" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#1948ff" /><stop offset="1" stopColor="#11106f" /></linearGradient>
-                  <linearGradient id="vera-shirt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#44f1c1" /><stop offset="1" stopColor="#13cda0" /></linearGradient>
-                  <radialGradient id="vera-skin" cx="48%" cy="35%" r="70%"><stop offset="0" stopColor="#b87555" /><stop offset="1" stopColor="#865039" /></radialGradient>
-                  <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="14" stdDeviation="12" floodColor="#02072c" floodOpacity=".35" /></filter>
+                  <linearGradient id="vera-jacket" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#315ff7" /><stop offset=".55" stopColor="#173ac7" /><stop offset="1" stopColor="#0b175d" /></linearGradient>
+                  <linearGradient id="vera-blouse" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#f8ffff" /><stop offset="1" stopColor="#b9f5e6" /></linearGradient>
+                  <radialGradient id="vera-skin" cx="42%" cy="28%" r="78%"><stop offset="0" stopColor="#f4c9a9" /><stop offset=".48" stopColor="#d99a74" /><stop offset=".82" stopColor="#bd7657" /><stop offset="1" stopColor="#95523f" /></radialGradient>
+                  <linearGradient id="vera-neck" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#ad654d" /><stop offset=".45" stopColor="#dc9b75" /><stop offset="1" stopColor="#a85f49" /></linearGradient>
+                  <linearGradient id="vera-hair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#170d0c" /><stop offset=".34" stopColor="#3a1d18" /><stop offset=".68" stopColor="#623424" /><stop offset="1" stopColor="#281411" /></linearGradient>
+                  <linearGradient id="vera-hair-shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#8b5538" stopOpacity="0" /><stop offset=".48" stopColor="#b9784e" stopOpacity=".58" /><stop offset="1" stopColor="#8b5538" stopOpacity="0" /></linearGradient>
+                  <linearGradient id="vera-lip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#a9525f" /><stop offset="1" stopColor="#71313e" /></linearGradient>
+                  <radialGradient id="vera-iris" cx="38%" cy="32%" r="65%"><stop offset="0" stopColor="#a77a45" /><stop offset=".58" stopColor="#5f4028" /><stop offset="1" stopColor="#241914" /></radialGradient>
+                  <filter id="portrait-shadow" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="15" stdDeviation="11" floodColor="#02072c" floodOpacity=".42" /></filter>
+                  <filter id="face-softness" x="-15%" y="-15%" width="130%" height="130%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="blur" />
+                    <feSpecularLighting in="blur" surfaceScale="2" specularConstant=".22" specularExponent="18" lightingColor="#fff3e7" result="light"><feDistantLight azimuth="225" elevation="52" /></feSpecularLighting>
+                    <feComposite in="light" in2="SourceAlpha" operator="in" result="lit" /><feBlend in="SourceGraphic" in2="lit" mode="soft-light" />
+                  </filter>
                 </defs>
-                <g filter="url(#soft-shadow)">
-                  <path className="avatar-body" d="M45 410c4-89 52-139 135-139s131 50 135 139H45Z" fill="url(#vera-jacket)" />
-                  <path d="m126 284 54 72 54-72c-15-9-33-13-54-13s-39 4-54 13Z" fill="url(#vera-shirt)" />
-                  <path d="M146 259h68v52c-8 14-19 21-34 21s-26-7-34-21v-52Z" fill="url(#vera-skin)" />
-                  <ellipse cx="180" cy="174" rx="88" ry="105" fill="url(#vera-skin)" />
-                  <path d="M94 176c-9-74 22-132 86-132 66 0 104 51 89 136-14-37-29-65-56-87-27 29-66 50-119 57v26Z" fill="#201727" />
-                  <path d="M100 161c2-77 35-111 85-111 34 0 63 20 77 55-25-29-54-39-86-29-24 8-45 36-76 52v33Z" fill="#302134" opacity=".85" />
-                  <path d="M104 149c-17 3-20 25-10 42 5 9 12 13 20 12l-3-53-7-1Zm152 0c17 3 20 25 10 42-5 9-12 13-20 12l3-53 7-1Z" fill="#945a41" />
-                  <path d="M134 158c12-8 24-8 36 0M190 158c12-8 24-8 36 0" fill="none" stroke="#3f2725" strokeWidth="5" strokeLinecap="round" />
-                  <ellipse cx="153" cy="174" rx="6" ry="7" fill="#17131b" /><ellipse cx="207" cy="174" rx="6" ry="7" fill="#17131b" />
-                  <circle cx="155" cy="172" r="1.7" fill="white" /><circle cx="209" cy="172" r="1.7" fill="white" />
-                  <path d="M180 178c-5 13-7 25 2 29" fill="none" stroke="#71402f" strokeWidth="4" strokeLinecap="round" />
-                  <ellipse className="avatar-mouth" cx="181" cy="226" rx="21" ry="7" fill="#5d2930" />
-                  <path d="M164 224c11 8 23 8 34 0" fill="none" stroke="#f5c7b5" strokeWidth="3" strokeLinecap="round" opacity=".85" />
-                  <path d="M103 178c2 57 23 95 57 113M257 178c-2 57-23 95-57 113" fill="none" stroke="#211727" strokeWidth="18" strokeLinecap="round" />
-                  <circle cx="112" cy="223" r="7" fill="#3ce9bb" /><circle cx="248" cy="223" r="7" fill="#3ce9bb" />
+                <g filter="url(#portrait-shadow)">
+                  <path d="M91 272C88 196 92 113 126 73c27-32 83-39 116-6 39 39 35 130 28 213-42 29-134 31-179-8Z" fill="url(#vera-hair)" />
+                  <path className="avatar-body" d="M34 410c5-83 54-132 146-132 91 0 140 49 146 132H34Z" fill="url(#vera-jacket)" />
+                  <path d="M113 298 151 282l29 57 29-57 39 16-14 112H126l-13-112Z" fill="url(#vera-blouse)" />
+                  <path d="m113 298 40-18 27 59-48-29-16 46-18-36 15-22Zm134 0-40-18-27 59 48-29 16 46 18-36-15-22Z" fill="#0f2f9b" opacity=".96" />
+                  <path d="M147 247h66v54c-6 21-18 31-33 31s-27-10-33-31v-54Z" fill="url(#vera-neck)" />
+                  <path d="M148 275c19 11 45 11 64-1-4 21-15 33-32 33-16 0-27-11-32-32Z" fill="#985540" opacity=".32" />
+                  <ellipse cx="114" cy="174" rx="18" ry="29" fill="#c98564" /><ellipse cx="246" cy="174" rx="18" ry="29" fill="#bd7659" />
+                  <path d="M180 70c-42-1-69 29-68 87 1 43 6 76 26 99 13 15 28 24 42 24s30-9 43-24c20-23 25-56 26-99 1-58-27-88-69-87Z" fill="url(#vera-skin)" filter="url(#face-softness)" />
+                  <path d="M120 158c3 55 12 86 35 106-17-6-31-22-39-45-7-20-8-42-7-62l11 1Z" fill="#8d4839" opacity=".2" />
+                  <path d="M205 83c25 14 38 42 38 79 0 47-11 80-34 101 30-16 41-54 40-106-1-39-14-64-44-74Z" fill="#7f3d31" opacity=".14" />
+                  <ellipse cx="150" cy="208" rx="24" ry="12" fill="#d87f73" opacity=".16" /><ellipse cx="212" cy="208" rx="24" ry="12" fill="#d87f73" opacity=".14" />
+                  <path d="M108 158c-7-54 10-101 54-115 40-13 84 6 101 47 8 19 7 45 1 69-8-31-25-56-51-78-25 27-58 48-105 61v16Z" fill="url(#vera-hair)" />
+                  <path d="M111 142c16-49 48-78 91-82-31 12-50 34-61 63-8 8-18 14-30 19Z" fill="#70402c" opacity=".62" />
+                  <path d="M156 53c29-13 65-4 85 19-33-16-61-12-84 7-13 11-25 25-40 35 8-30 20-50 39-61Z" fill="url(#vera-hair-shine)" opacity=".76" />
+                  <path d="M135 157c10-8 23-9 34-2M192 155c12-7 25-6 35 2" fill="none" stroke="#5e3329" strokeWidth="5.5" strokeLinecap="round" />
+                  <path d="M135 169c9-10 24-11 35-1-9 11-25 12-35 1ZM190 168c11-10 26-9 35 1-10 11-26 10-35-1Z" fill="#fffaf5" />
+                  <ellipse cx="153" cy="169" rx="7.2" ry="8" fill="url(#vera-iris)" /><ellipse cx="207" cy="169" rx="7.2" ry="8" fill="url(#vera-iris)" />
+                  <circle cx="153" cy="170" r="3.6" fill="#15100e" /><circle cx="207" cy="170" r="3.6" fill="#15100e" />
+                  <circle cx="150.5" cy="166.5" r="2" fill="white" /><circle cx="204.5" cy="166.5" r="2" fill="white" />
+                  <path d="M135 168c10-10 24-11 35-1m20 0c11-10 26-9 35 1" fill="none" stroke="#40231f" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M137 165 132 161m8 2-2-5m84 7 5-4m-8 2 2-5" fill="none" stroke="#40231f" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M179 174c-4 13-8 29-5 38 3 5 9 6 15 2" fill="none" stroke="#9b5744" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M170 216c6 4 15 4 21-1" fill="none" stroke="#8d493c" strokeWidth="2" strokeLinecap="round" opacity=".72" />
+                  <path d="M155 231c7-8 16-9 25-4 9-5 18-4 26 4-15 13-36 13-51 0Z" fill="url(#vera-lip)" />
+                  <ellipse className="avatar-mouth" cx="180" cy="232" rx="16" ry="3.8" fill="#4d2029" />
+                  <path d="M162 232c12 5 24 5 36 0-7 9-29 10-36 0Z" fill="#d9868f" opacity=".9" /><path d="M165 229c10-3 20-3 30 0-8 4-23 4-30 0Z" fill="#fff7ee" opacity=".82" />
+                  <path d="M105 131c-8 48-4 101 17 132 10 15 24 27 41 34l7-17c-32-18-47-48-46-91l-1-53-18-5ZM255 124c11 48 9 101-11 135-10 17-25 30-44 39l-8-18c32-18 47-50 45-94l1-52 17-10Z" fill="url(#vera-hair)" />
+                  <path d="M113 147c-3 51 7 94 39 126M248 140c5 50-5 96-38 131" fill="none" stroke="#9b6040" strokeWidth="5" strokeLinecap="round" opacity=".4" />
+                  <path d="M101 209c-3 28 3 55 18 76M260 203c2 29-5 57-20 78" fill="none" stroke="#bc7950" strokeWidth="2.5" strokeLinecap="round" opacity=".3" />
+                  <circle cx="115" cy="212" r="6" fill="#d8fff5" /><circle cx="245" cy="212" r="6" fill="#d8fff5" /><circle cx="115" cy="212" r="3.5" fill="#3ce9bb" /><circle cx="245" cy="212" r="3.5" fill="#3ce9bb" />
                 </g>
               </svg>
               <div className="avatar-spark avatar-spark--one"><Sparkles size={16} /></div>

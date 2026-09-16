@@ -110,11 +110,51 @@ export function useVoiceInput(onFinalTranscript: (transcript: string) => void) {
   return { error, interimTranscript, isListening, isSupported, start, stop, toggle };
 }
 
+const likelyFemaleVoiceName = /female|sonia|libby|hazel|serena|kate|susan|abbi|maisie|martha|fiona|samantha|aria|jenny|zira|victoria|karen|moira|tessa/i;
+
+function normalizedLanguage(voice: SpeechSynthesisVoice) {
+  return voice.lang.toLowerCase().replace("_", "-");
+}
+
+export function selectPreferredBritishVoice(voices: SpeechSynthesisVoice[]) {
+  const isEnglish = (voice: SpeechSynthesisVoice) => normalizedLanguage(voice).startsWith("en");
+  const isBritish = (voice: SpeechSynthesisVoice) => normalizedLanguage(voice).startsWith("en-gb");
+  const isLikelyFemale = (voice: SpeechSynthesisVoice) => likelyFemaleVoiceName.test(voice.name);
+  const firstMatch = (predicate: (voice: SpeechSynthesisVoice) => boolean) => voices.find(predicate);
+
+  return (
+    firstMatch((voice) => isBritish(voice) && isLikelyFemale(voice) && voice.localService) ??
+    firstMatch((voice) => isBritish(voice) && isLikelyFemale(voice)) ??
+    firstMatch((voice) => isEnglish(voice) && isLikelyFemale(voice) && voice.localService) ??
+    firstMatch((voice) => isEnglish(voice) && isLikelyFemale(voice)) ??
+    firstMatch((voice) => isBritish(voice) && voice.localService) ??
+    firstMatch(isBritish) ??
+    firstMatch((voice) => isEnglish(voice) && voice.localService) ??
+    firstMatch(isEnglish)
+  );
+}
+
 export function useSpeechOutput(enabled: boolean) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const isSupported = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  useEffect(() => {
+    if (!isSupported) return;
+    const synthesis = window.speechSynthesis;
+    const refreshVoices = () => {
+      const voices = synthesis.getVoices();
+      if (voices.length > 0) voicesRef.current = voices;
+    };
+
+    refreshVoices();
+    synthesis.addEventListener?.("voiceschanged", refreshVoices);
+    return () => synthesis.removeEventListener?.("voiceschanged", refreshVoices);
+  }, [isSupported]);
 
   const stop = useCallback(() => {
+    utteranceRef.current = null;
     if (isSupported) window.speechSynthesis.cancel();
     setIsSpeaking(false);
   }, [isSupported]);
@@ -125,16 +165,32 @@ export function useSpeechOutput(enabled: boolean) {
 
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(
-        (voice) => voice.lang.startsWith("en") && /samantha|aria|jenny|zira|female/i.test(voice.name),
+      const currentVoices = window.speechSynthesis.getVoices();
+      if (currentVoices.length > 0) voicesRef.current = currentVoices;
+      const preferredVoice = selectPreferredBritishVoice(
+        currentVoices.length > 0 ? currentVoices : voicesRef.current,
       );
+
       if (preferredVoice) utterance.voice = preferredVoice;
-      utterance.rate = 1.02;
-      utterance.pitch = 1.02;
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      utterance.lang = preferredVoice?.lang || "en-GB";
+      utterance.rate = 0.98;
+      utterance.pitch = 1;
+      utteranceRef.current = utterance;
+      utterance.onstart = () => {
+        if (utteranceRef.current === utterance) setIsSpeaking(true);
+      };
+      utterance.onend = () => {
+        if (utteranceRef.current === utterance) {
+          utteranceRef.current = null;
+          setIsSpeaking(false);
+        }
+      };
+      utterance.onerror = () => {
+        if (utteranceRef.current === utterance) {
+          utteranceRef.current = null;
+          setIsSpeaking(false);
+        }
+      };
       window.speechSynthesis.speak(utterance);
     },
     [enabled, isSupported],
