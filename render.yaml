@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: vera-care-navigator
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 24.14.0
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: OPENAI_MODEL
+        value: gpt-5-mini
