@@ -486,37 +486,156 @@ h3,
   box-shadow: inset 0 0 70px rgba(81, 109, 255, 0.15), 0 24px 60px rgba(0, 5, 34, 0.35);
 }
 
-.vera-avatar {
+/*
+ * Photoreal fallback guide. All offsets below are measured against
+ * src/assets/vera-portrait.jpg and must be retuned if that image is replaced.
+ */
+.vera-photo {
+  --photo-top: -7%;
+
+  /* Seam between the lips, measured from the top of the image. */
+  --mouth-line: 44.3%;
+  --mouth-center: 49.8%;
+  --mouth-width: 9.5%;
+  --mouth-depth: 2.6%;
+
+  /* Soft ellipse that limits jaw travel to the mouth and chin. */
+  --jaw-radius-x: 13%;
+  --jaw-radius-y: 8%;
+  --jaw-center: 47%;
+
+  /* Strip of eyelid skin between the brow and the open eye. */
+  --lid-top: 30.15%;
+  --lid-bottom: 31.15%;
+  --lid-stretch: 3.6;
+
   position: absolute;
-  bottom: -2px;
-  left: 50%;
-  width: 94%;
+  inset: 0;
+}
+
+.vera-photo__placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.28);
+  font-family: "Manrope", sans-serif;
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.vera-photo__stage {
+  position: absolute;
+  top: var(--photo-top);
+  right: 0;
+  left: 0;
+  aspect-ratio: 2 / 3;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  animation: veraBreathe 5.4s ease-in-out infinite;
+}
+
+.vera-photo__stage--ready {
+  opacity: 1;
+}
+
+.avatar-stage--listening .vera-photo__stage {
+  animation: veraListenTilt 2.6s ease-in-out infinite;
+}
+
+.avatar-stage--thinking .vera-photo__stage {
+  animation: veraThinkTilt 2s ease-in-out infinite;
+}
+
+.avatar-stage--speaking .vera-photo__stage {
+  animation: veraSpeakBob 1.6s ease-in-out infinite;
+}
+
+.vera-photo__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+/*
+ * Lower face rides on top of the mouth cavity so speech parts the lips.
+ * The hard clip keeps the upper lip still; the soft mask keeps the travelling
+ * edge from cutting a visible seam across the cheeks, hair, and backdrop.
+ */
+.vera-photo__jaw {
+  clip-path: inset(var(--mouth-line) 0 0 0);
+  transform-origin: 50% var(--mouth-line);
+  mask-image: radial-gradient(
+    ellipse var(--jaw-radius-x) var(--jaw-radius-y) at var(--mouth-center) var(--jaw-center),
+    #000 50%,
+    transparent 100%
+  );
+}
+
+.avatar-stage--speaking .vera-photo__jaw {
+  animation: veraJaw 0.46s ease-in-out infinite;
+}
+
+.vera-photo__mouth {
+  position: absolute;
+  top: calc(var(--mouth-line) + 0.2%);
+  left: var(--mouth-center);
+  width: var(--mouth-width);
+  height: var(--mouth-depth);
+  border-radius: 0 0 46% 46% / 0 0 82% 82%;
+  /* Upper teeth at the lip line, then the darker cavity as the jaw drops. */
+  background: linear-gradient(180deg, #e3d3cb 0%, #b08d86 9%, #56262b 26%, #2b1014 64%, #190a0c 100%);
+  opacity: 0;
   transform: translateX(-50%);
-  transform-origin: bottom center;
-  animation: avatarIdle 4s ease-in-out infinite;
+  transition: opacity 140ms ease;
+  filter: blur(0.8px);
 }
 
-.avatar-stage--thinking .vera-avatar {
-  animation: avatarThink 1.8s ease-in-out infinite;
+.avatar-stage--speaking .vera-photo__mouth {
+  opacity: 1;
 }
 
-.avatar-stage--listening .vera-avatar {
-  animation: avatarListen 2.2s ease-in-out infinite;
+/* Without jaw motion there is nothing to reveal, so keep the mouth closed. */
+@media (prefers-reduced-motion: reduce) {
+  .vera-photo__mouth {
+    display: none;
+  }
 }
 
-.avatar-mouth,
-.avatar-body {
-  transform-box: fill-box;
+/*
+ * A strip of eyelid skin stretched down over each eye reads as a blink.
+ * The eyes are masked separately so the nose bridge between them is untouched.
+ */
+.vera-photo__lid {
+  transform-origin: 50% var(--lid-top);
+  transform: scaleY(1);
+  transition: transform 80ms ease-in;
+  filter: blur(0.4px);
 }
 
-.avatar-stage--speaking .avatar-mouth {
-  animation: avatarSpeak 0.34s ease-in-out infinite alternate;
-  transform-origin: center;
+.vera-photo__lid--left {
+  clip-path: inset(var(--lid-top) 55.6% calc(100% - var(--lid-bottom)) 36.6%);
 }
 
-.avatar-stage--speaking .avatar-body {
-  animation: avatarTalkBody 1.3s ease-in-out infinite;
-  transform-origin: bottom;
+.vera-photo__lid--right {
+  clip-path: inset(var(--lid-top) 38.4% calc(100% - var(--lid-bottom)) 55%);
+}
+
+.vera-photo--blinking .vera-photo__lid {
+  transform: scaleY(var(--lid-stretch));
+}
+
+.vera-photo__vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 36%, transparent 45%, rgba(4, 10, 48, 0.55) 100%),
+    linear-gradient(180deg, transparent 58%, rgba(6, 12, 54, 0.6) 100%);
+  pointer-events: none;
 }
 
 .avatar-spark {
@@ -2232,29 +2351,36 @@ h3,
   font-weight: 700;
 }
 
-@keyframes avatarIdle {
-  0%, 100% { transform: translateX(-50%) translateY(0) rotate(0); }
-  50% { transform: translateX(-50%) translateY(3px) rotate(.25deg); }
+@keyframes veraBreathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(0.45%) scale(1.006); }
 }
 
-@keyframes avatarListen {
-  0%, 100% { transform: translateX(-50%) rotate(0); }
-  50% { transform: translateX(-50%) rotate(-1.2deg); }
+@keyframes veraListenTilt {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-0.3%) rotate(-0.9deg); }
 }
 
-@keyframes avatarThink {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(2px) rotate(0.8deg); }
+@keyframes veraThinkTilt {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(0.35%) rotate(0.75deg); }
 }
 
-@keyframes avatarSpeak {
-  from { transform: scaleY(0.65) scaleX(1.05); }
-  to { transform: scaleY(1.65) scaleX(0.82); }
+@keyframes veraSpeakBob {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  28% { transform: translateY(0.3%) rotate(0.25deg); }
+  62% { transform: translateY(-0.2%) rotate(-0.3deg); }
 }
 
-@keyframes avatarTalkBody {
-  0%, 100% { transform: rotate(0); }
-  50% { transform: rotate(.35deg); }
+/* Irregular steps keep the jaw from reading as a metronome. */
+@keyframes veraJaw {
+  0% { transform: translateY(0) scaleY(1); }
+  18% { transform: translateY(0.9%) scaleY(1.012); }
+  34% { transform: translateY(0.35%) scaleY(1.005); }
+  52% { transform: translateY(1.25%) scaleY(1.018); }
+  70% { transform: translateY(0.5%) scaleY(1.006); }
+  86% { transform: translateY(1%) scaleY(1.014); }
+  100% { transform: translateY(0) scaleY(1); }
 }
 
 @keyframes orbitBreathe {
