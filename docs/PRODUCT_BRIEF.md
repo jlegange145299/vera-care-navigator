@@ -59,13 +59,13 @@ Unlike a standalone chatbot, Vera closes a loop and produces governed operationa
 
 The working application demonstrates:
 
-- three synthetic journeys across affordability, outcomes, and experience;
+- four synthetic journeys across affordability, outcomes, experience, and wellness device opt-in, plus sourced health-statement fact-checks and location-based hospital pre-registration;
 - voice input and spoken response;
 - real-time avatar listening/thinking/speaking states;
 - optional LiveAvatar session creation;
 - explainable action cards with synthetic source freshness;
 - action completion and human/emergency boundaries;
-- a business dashboard with opportunity, resolution, clarity, access, and privacy views;
+- a business dashboard with opportunity, resolution, clarity, access, **portfolio wellness**, and privacy views;
 - deterministic no-key operation plus optional OpenAI orchestration;
 - a one-service Render deployment path.
 
@@ -77,6 +77,7 @@ Dashboard numbers in the PoC are illustrative hypotheses, not company results. A
 |---|---|---|
 | Affordability | member out-of-pocket opportunity accepted | more eligible 90-day/lower-cost options completed |
 | Health outcomes | time from intent to appropriate care | fewer abandoned searches; faster matched appointments |
+| Wellness | opt-in device summaries and coaching use | higher movement/sleep regularity; unused coaching sessions used |
 | Experience | time to clarity and teach-back confidence | fewer repeat contacts and “status misunderstanding” calls |
 | Operations | self-service resolution and handoff completeness | fewer transfers; shorter handling time after warm handoff |
 | Growth/retention | benefit adoption and client experience | stronger demonstrated value realization |

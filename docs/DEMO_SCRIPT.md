@@ -7,7 +7,7 @@
 - Allow microphone permission if using voice.
 - Keep browser zoom at 90–100% and use a desktop-width window.
 - If using LiveAvatar, verify account credits and the configured avatar before the session. Do not start it until the demo segment.
-- The deterministic avatar, speech, and three journeys require no provider credentials.
+- The deterministic avatars, speech, and showcase journeys require no provider credentials.
 
 ## 90-second judge path
 
@@ -15,7 +15,11 @@
 
 > “Healthcare value already exists, but members experience it as documents, directories, phone queues, and handoffs. Vera turns every benefit into one clear next step—personalized to the individual, not the average member.”
 
-Point out the synthetic member context and “3 opportunities found.”
+Open the member control in the top-right corner. Switch briefly from Jordan to **Noor, 38, Dubai**, then **Josh, 65, London**.
+
+> “Vera can present a familiar, demographic-matched guide while retaining the same safety and governance. These are generated portraits and synthetic personas—not real members.”
+
+Return to Jordan, then point out the synthetic member context and “5 opportunities found.”
 
 ### 12–42 seconds — human interaction
 
@@ -58,6 +62,9 @@ Use one journey for each scorecard value pillar:
 1. **Affordability:** prescription 90-day option.
 2. **Health outcomes:** find a therapist this week.
 3. **Member experience:** explain and advance an MRI authorization.
+4. **Wellness / outcomes:** link a phone or wearable, show the 7-day summary, and point to **Portfolio wellness** on the dashboard.
+5. **Trust:** tap **Check a health claim**. Vera rates the statement and cites CDC, NIH, or AHA—never an unsourced verdict.
+6. **Hospital arrival:** tap **Find the right hospital**. Show the closest facility, the bring-list, the simulated provider packet, recovery timing, and slower alternatives.
 
 Then show:
 

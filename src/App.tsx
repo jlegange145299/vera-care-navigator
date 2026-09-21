@@ -1,13 +1,15 @@
-import { BarChart3, ChevronDown, LockKeyhole, Menu, MessageCircle, X } from "lucide-react";
+import { BarChart3, LockKeyhole, Menu, MessageCircle, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrandMark } from "./components/BrandMark";
 import { DemoGuide } from "./components/DemoGuide";
 import { InsightsDashboard } from "./components/InsightsDashboard";
 import { MemberExperience } from "./components/MemberExperience";
-import { actionConfirmations, demoScenarios, getDemoReply, initialMessages } from "./data/demoData";
+import { ProfileSwitcher } from "./components/ProfileSwitcher";
+import { demoScenarios, getActionConfirmation, getDemoReply } from "./data/demoData";
+import { createWelcomeMessage, defaultMemberProfile } from "./data/memberProfiles";
 import { useSpeechOutput } from "./hooks/useBrowserVoice";
 import { requestVeraReply, type ConversationHistoryItem } from "./lib/api";
-import type { ActionPlan, ChatMessage, ExperienceView } from "./types";
+import type { ActionCompletion, ActionPlan, ChatMessage, ExperienceView, WellnessDeviceId } from "./types";
 
 function createMessageId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -16,10 +18,13 @@ function createMessageId(prefix: string) {
 function App() {
   const [view, setView] = useState<ExperienceView>("member");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [profile, setProfile] = useState(defaultMemberProfile);
+  const [messages, setMessages] = useState<ChatMessage[]>([createWelcomeMessage(defaultMemberProfile)]);
   const [isThinking, setIsThinking] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [completedActions, setCompletedActions] = useState<Set<string>>(new Set());
+  const [linkedDevices, setLinkedDevices] = useState<WellnessDeviceId[]>([]);
+  const [locationMethod, setLocationMethod] = useState<"ip" | "gps">("ip");
   const requestRef = useRef<AbortController | null>(null);
   const { isSpeaking, speak, stop } = useSpeechOutput(speechEnabled);
 
@@ -34,6 +39,19 @@ function App() {
     setView(nextView);
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const selectProfile = (nextProfile: typeof profile) => {
+    if (nextProfile.id === profile.id) return;
+    requestRef.current?.abort();
+    stop();
+    setProfile(nextProfile);
+    setMessages([createWelcomeMessage(nextProfile)]);
+    setCompletedActions(new Set());
+    setLinkedDevices([]);
+    setLocationMethod("ip");
+    setIsThinking(false);
+    setView("member");
   };
 
   const handleSend = useCallback(
@@ -59,6 +77,7 @@ function App() {
       requestRef.current = controller;
       let responseText: string;
       let plan: ActionPlan | undefined;
+      let factCheck: ChatMessage["factCheck"];
 
       try {
         const [reply] = await Promise.all([
@@ -66,8 +85,11 @@ function App() {
           new Promise((resolve) => window.setTimeout(resolve, 550)),
         ]);
         responseText = reply.text;
+        factCheck = reply.factCheck;
         plan = reply.planId
-          ? demoScenarios.find((scenario) => scenario.id === reply.planId)?.plan
+          ? completedActions.has(reply.planId)
+            ? undefined
+            : demoScenarios.find((scenario) => scenario.id === reply.planId)?.plan
           : undefined;
       } catch (error) {
         if (controller.signal.aborted) return;
@@ -75,6 +97,7 @@ function App() {
         const fallback = getDemoReply(text);
         responseText = fallback.text;
         plan = fallback.plan;
+        factCheck = fallback.factCheck;
       } finally {
         if (requestRef.current === controller) {
           requestRef.current = null;
@@ -89,18 +112,21 @@ function App() {
         text: responseText,
         timestamp: "Just now",
         plan,
+        factCheck,
       };
       setMessages((current) => [...current, assistantMessage]);
       speak(responseText);
     },
-    [isThinking, messages, speak, stop],
+    [isThinking, messages, completedActions, speak, stop],
   );
 
   const handleCompleteAction = useCallback(
-    (plan: ActionPlan) => {
+    (plan: ActionPlan, extras: ActionCompletion = {}) => {
       if (completedActions.has(plan.id)) return;
       setCompletedActions((current) => new Set(current).add(plan.id));
-      const confirmation = actionConfirmations[plan.id];
+      if (plan.id === "wellness-connect") setLinkedDevices(extras.deviceIds ?? []);
+      if (plan.id === "hospital-prereg" && extras.locationMethod) setLocationMethod(extras.locationMethod);
+      const confirmation = getActionConfirmation(plan.id, extras);
       const message: ChatMessage = {
         id: createMessageId("action"),
         role: "assistant",
@@ -130,18 +156,21 @@ function App() {
         </nav>
         <div className="header-actions">
           <span className="header-privacy"><LockKeyhole size={14} /> Protected session</span>
-          <button className="profile-button" type="button"><span>JL</span><span className="profile-button__copy"><strong>Jordan</strong><small>Member</small></span><ChevronDown size={14} /></button>
+          <ProfileSwitcher profile={profile} onSelect={selectProfile} />
           <button className="mobile-menu-button" type="button" onClick={() => setMobileMenuOpen((open) => !open)} aria-label="Toggle navigation" aria-expanded={mobileMenuOpen}>{mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}</button>
         </div>
       </header>
 
       {view === "member" ? (
         <MemberExperience
+          profile={profile}
           messages={messages}
           isThinking={isThinking}
           isSpeaking={isSpeaking}
           speechEnabled={speechEnabled}
           completedActions={completedActions}
+          linkedDevices={linkedDevices}
+          locationMethod={locationMethod}
           onSend={handleSend}
           onCompleteAction={handleCompleteAction}
           onToggleSpeech={toggleSpeech}

@@ -42,7 +42,9 @@ The client sends a bounded message and up to ten bounded history items. Zod reje
 }
 ```
 
-`planId` references a locally controlled action-card definition. The model can select an approved journey but cannot invent executable UI or an unregistered transaction. Emergency keywords bypass the model. If provider output is missing, malformed, or unavailable, the deterministic server engine responds; if the server is unavailable, the browser has the same showcase fallback.
+`planId` references a locally controlled action-card definition (rx-savings, care-access, prior-auth, wellness-connect, or hospital-prereg). The model can select an approved journey but cannot invent executable UI or an unregistered transaction. Emergency keywords bypass the model. Health-statement fact-checks also bypass the model: Vera matches the claim to a CDC / NIH / AHA library, returns true, partly true, completely false, or unverified, and always includes the source. Hospital matching uses city-level IP location by default; optional phone GPS refines the same demo area and is not stored. If provider output is missing, malformed, or unavailable, the deterministic server engine responds; if the server is unavailable, the browser has the same showcase fallback.
+
+Wellness device linking is synthetic and consent-bound: the UI collects which phone or wearable the member would share, then Vera uses weekly summaries only (steps, sleep duration, active minutes). Portfolio wellness metrics on the dashboard are de-identified cohort rates, not named members.
 
 ## LiveAvatar boundary
 

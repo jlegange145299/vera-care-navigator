@@ -56,6 +56,49 @@ describe("Vera API", () => {
     expect(response.body.text).toContain("$312");
   });
 
+  it("returns a wellness opt-in contract for device linking", async () => {
+    const response = await request(createApp())
+      .post("/api/chat")
+      .send({ message: "Please link my Fitbit so I can get wellness advice", history: [] })
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      mode: "demo",
+      intent: "wellness-connect",
+      planId: "wellness-connect",
+    });
+    expect(response.body.text).toContain("4,280");
+  });
+
+  it("returns a hospital pre-registration contract from location intent", async () => {
+    const response = await request(createApp())
+      .post("/api/chat")
+      .send({ message: "Which hospital is best from my location so I can pre-register?", history: [] })
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      mode: "demo",
+      intent: "hospital-prereg",
+      planId: "hospital-prereg",
+    });
+    expect(response.body.text).toContain("Hartford Hospital");
+  });
+
+  it("fact-checks a health statement with a sourced verdict", async () => {
+    const response = await request(createApp())
+      .post("/api/chat")
+      .send({ message: "Is it true that antibiotics treat the common cold?", history: [] })
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      mode: "demo",
+      intent: "fact-check",
+    });
+    expect(response.body.factCheck.verdict).toBe("false");
+    expect(response.body.factCheck.sources[0].organization).toContain("Centers for Disease Control");
+    expect(response.body.text).toContain("completely false");
+  });
+
   it("routes safety language deterministically and rejects malformed input", async () => {
     const app = createApp();
     const safetyResponse = await request(app)

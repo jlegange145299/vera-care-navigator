@@ -24,7 +24,7 @@ import {
   WalletCards,
   Zap,
 } from "lucide-react";
-import { frictionJourneys, opportunitySignals, signalFeed } from "../data/demoData";
+import { frictionJourneys, opportunitySignals, portfolioWellness, signalFeed } from "../data/demoData";
 
 const kpis = [
   { label: "Projected value unlocked", value: "$1.84M", change: "+18.2%", icon: WalletCards, tone: "mint", detail: "annualized member + plan value" },
@@ -65,7 +65,7 @@ export function InsightsDashboard() {
           <p>De-identified conversation signals reveal unmet needs, quantify avoidable friction, and show which interventions improve affordability, outcomes, and experience.</p>
         </div>
         <div className="insights-hero__controls">
-          <label className="select-control"><Users size={15} /><select value={segment} onChange={(event) => setSegment(event.target.value)} aria-label="Member segment"><option>All members</option><option>Commercial plans</option><option>New plan members</option><option>Behavioral health journeys</option></select><ChevronDown size={14} /></label>
+          <label className="select-control"><Users size={15} /><select value={segment} onChange={(event) => setSegment(event.target.value)} aria-label="Member segment"><option>All members</option><option>Commercial plans</option><option>New plan members</option><option>Behavioral health journeys</option><option>Wellness-linked members</option></select><ChevronDown size={14} /></label>
           <label className="select-control"><Clock3 size={15} /><select value={range} onChange={(event) => setRange(event.target.value)} aria-label="Time range"><option>Last 30 days</option><option>Last 7 days</option><option>Quarter to date</option></select><ChevronDown size={14} /></label>
           <button className="export-button" type="button" onClick={exportSnapshot}><Download size={16} /> Export snapshot</button>
         </div>
@@ -107,7 +107,7 @@ export function InsightsDashboard() {
               </div>
             ))}
           </div>
-          <div className="pillar-legend"><span><i className="legend-dot legend-dot--mint" />Affordability</span><span><i className="legend-dot legend-dot--blue" />Health outcomes</span><span><i className="legend-dot legend-dot--violet" />Experience</span></div>
+          <div className="pillar-legend"><span><i className="legend-dot legend-dot--mint" />Affordability</span><span><i className="legend-dot legend-dot--blue" />Health outcomes</span><span><i className="legend-dot legend-dot--teal" />Hospital arrival</span><span><i className="legend-dot legend-dot--coral" />Wellness</span><span><i className="legend-dot legend-dot--violet" />Experience</span></div>
         </article>
 
         <article className="dashboard-card outcomes-card">
@@ -124,6 +124,31 @@ export function InsightsDashboard() {
             </div>
           </div>
           <div className="outcome-callout"><span><Lightbulb size={17} /></span><div><strong>Biggest mover</strong><p>Structured provider reminders reduced authorization status calls by <b>21%</b>.</p></div></div>
+        </article>
+      </section>
+
+      <section className="insights-grid insights-grid--wellness" aria-label="Portfolio wellness">
+        <article className="dashboard-card wellness-portfolio-card">
+          <header className="dashboard-card__header">
+            <div><span className="card-icon card-icon--coral"><HeartPulse size={17} /></span><div><h2>Portfolio wellness</h2><p>Opt-in device summaries, never identified members</p></div></div>
+            <span className="confidence-chip"><LockKeyhole size={14} /> k-anonymous cohorts</span>
+          </header>
+          <div className="wellness-kpis">
+            <div><span>Device opt-in</span><strong>{portfolioWellness.optInRate}</strong><small>{portfolioWellness.optInChange} vs prior period</small></div>
+            <div><span>Median daily steps</span><strong>{portfolioWellness.medianSteps}</strong><small>{portfolioWellness.linkedMembers} members linked</small></div>
+            <div><span>Sleep regularity</span><strong>{portfolioWellness.sleepRegularity}</strong><small>4+ nights near personal baseline</small></div>
+            <div><span>Preventable-risk value</span><strong>{portfolioWellness.preventableRisk}</strong><small>coaching + movement opportunity</small></div>
+          </div>
+          <div className="wellness-cohorts">
+            {portfolioWellness.cohorts.map((cohort) => (
+              <div className={`wellness-cohort wellness-cohort--${cohort.tone}`} key={cohort.label}>
+                <strong>{cohort.value}</strong>
+                <span>{cohort.label}</span>
+                <small>{cohort.detail}</small>
+              </div>
+            ))}
+          </div>
+          <p className="wellness-privacy-note">Leaders see rates and minimum-size cohorts from weekly summaries (steps, sleep duration, active minutes). Raw GPS, heart-rate streams, and names never enter this layer.</p>
         </article>
       </section>
 

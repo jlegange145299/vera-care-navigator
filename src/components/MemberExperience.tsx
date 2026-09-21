@@ -12,28 +12,38 @@ import {
   VolumeX,
 } from "lucide-react";
 import { demoScenarios } from "../data/demoData";
+import { factCheckPrompt } from "../data/factCheck";
 import { useVoiceInput } from "../hooks/useBrowserVoice";
-import type { ActionPlan, AvatarStatus, ChatMessage } from "../types";
+import type { ActionCompletion, ActionPlan, AvatarStatus, ChatMessage, MemberProfile, WellnessDeviceId } from "../types";
 import { ActionCard } from "./ActionCard";
 import { AvatarStage } from "./AvatarStage";
+import { FactCheckCard } from "./FactCheckCard";
+import { HospitalPrepCard } from "./HospitalPrepCard";
+import { WellnessPulse } from "./WellnessPulse";
 
 interface MemberExperienceProps {
+  profile: MemberProfile;
   messages: ChatMessage[];
   isThinking: boolean;
   isSpeaking: boolean;
   speechEnabled: boolean;
   completedActions: Set<string>;
+  linkedDevices: WellnessDeviceId[];
+  locationMethod: "ip" | "gps";
   onSend: (message: string) => void;
-  onCompleteAction: (plan: ActionPlan) => void;
+  onCompleteAction: (plan: ActionPlan, extras?: ActionCompletion) => void;
   onToggleSpeech: () => void;
 }
 
 export function MemberExperience({
+  profile,
   messages,
   isThinking,
   isSpeaking,
   speechEnabled,
   completedActions,
+  linkedDevices,
+  locationMethod,
   onSend,
   onCompleteAction,
   onToggleSpeech,
@@ -80,17 +90,21 @@ export function MemberExperience({
     <main className="member-page">
       <section className="member-context" aria-label="Synthetic member context">
         <div className="member-context__welcome">
-          <span className="member-avatar" aria-hidden="true">JL</span>
-          <div><span>Good morning</span><strong>Jordan Lee</strong></div>
+          <img className="member-avatar" src={profile.portraitSrc} alt="" />
+          <div><span>{profile.greeting}</span><strong>{profile.fullName}</strong></div>
         </div>
         <div className="context-divider" />
-        <div className="context-item"><span>Plan</span><strong>Open Access Plus</strong></div>
-        <div className="context-item"><span>Coverage</span><strong>Medical + pharmacy</strong></div>
+        <div className="context-item"><span>Profile</span><strong>{profile.age} · {profile.genderLabel}</strong></div>
+        <div className="context-item"><span>Plan</span><strong>{profile.plan}</strong></div>
+        <div className="context-item"><span>Coverage</span><strong>{profile.coverage}</strong></div>
+        <div className="context-item"><span>Location</span><strong>{profile.city}, {profile.region} · {locationMethod.toUpperCase()}</strong></div>
+        <div className="context-item"><span>Wellness</span><strong>{linkedDevices.length ? `${linkedDevices.length} device${linkedDevices.length === 1 ? "" : "s"} linked` : "Not linked"}</strong></div>
         <div className="context-item context-item--verified"><ShieldCheck size={16} /><span><strong>Identity verified</strong><small>Synthetic profile</small></span></div>
       </section>
 
       <section className="experience-shell">
         <AvatarStage
+          profile={profile}
           status={avatarStatus}
           isListening={isListening}
           voiceSupported={isSupported}
@@ -121,7 +135,7 @@ export function MemberExperience({
           <div className="conversation-feed" ref={feedRef} aria-live="polite">
             <div className="proactive-insight">
               <span><Sparkles size={15} /></span>
-              <div><strong>3 opportunities found for you</strong><p>Vera connects benefit, care, and preference signals—never an “average member.”</p></div>
+              <div><strong>5 opportunities found for you</strong><p>Vera connects benefit, care, hospital arrival, wellness, and preference signals—never an “average member.”</p></div>
               <span className="proactive-insight__new">New</span>
             </div>
 
@@ -132,12 +146,24 @@ export function MemberExperience({
                   <div className="message-bubble">
                     <p>{message.text}</p>
                   </div>
-                  {message.plan && (
+                  {message.factCheck && <FactCheckCard result={message.factCheck} />}
+                  {message.plan?.facilities ? (
+                    <HospitalPrepCard
+                      plan={message.plan}
+                      completed={completedActions.has(message.plan.id)}
+                      onComplete={onCompleteAction}
+                    />
+                  ) : (
+                    message.plan && (
                     <ActionCard
                       plan={message.plan}
                       completed={completedActions.has(message.plan.id)}
                       onComplete={onCompleteAction}
                     />
+                    )
+                  )}
+                  {message.plan?.id === "wellness-connect" && completedActions.has("wellness-connect") && (
+                    <WellnessPulse />
                   )}
                   <span className="message-time">
                     {message.role === "assistant" && <CheckCircle2 size={12} />} {message.timestamp}
@@ -166,6 +192,9 @@ export function MemberExperience({
                   {scenario.shortLabel}
                 </button>
               ))}
+              <button type="button" onClick={() => onSend(factCheckPrompt.prompt)} disabled={isThinking}>
+                {factCheckPrompt.shortLabel}
+              </button>
             </div>
 
             <form className="composer" onSubmit={submit}>
@@ -183,7 +212,7 @@ export function MemberExperience({
                 onChange={(event) => setDraft(event.target.value)}
                 onKeyDown={handleComposerKeyDown}
                 rows={1}
-                placeholder={isListening ? "Listening…" : "Ask about care, cost, coverage, or next steps…"}
+                placeholder={isListening ? "Listening…" : "Ask about care, cost, coverage, or check a health claim…"}
                 aria-label="Message Vera"
               />
               <button className="composer__send" type="submit" disabled={!draft.trim() || isThinking} aria-label="Send message">
@@ -192,7 +221,7 @@ export function MemberExperience({
             </form>
 
             <div className="conversation-footnote">
-              <span><Info size={13} /> Demo uses synthetic data. Vera is not medical advice or an emergency service.</span>
+              <span><Info size={13} /> Demo uses synthetic data. Fact-checks cite CDC, NIH, and AHA library sources. Vera is not medical advice or an emergency service.</span>
               <button type="button" onClick={() => onSend("Please connect me with a human care advocate.")}>
                 <Headphones size={13} /> Human help
               </button>

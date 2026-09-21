@@ -8,6 +8,7 @@ Vera is a deployable React proof of concept for the 2026 Aspire iTournament chal
 
 - **Benefits-to-action graph:** answers culminate in explainable, source-labeled next steps.
 - **Personalization without “the average member”:** plan, journey, preferences, and current friction are considered together.
+- **Demographic-matched experience:** judges can switch among three synthetic member profiles—Jordan, Noor in Dubai, and Josh in London—and see Vera adapt the portrait, greeting, location, and member context.
 - **Closed-loop orchestration:** Vera can simulate starting a pharmacy switch, holding care, or closing an authorization handoff.
 - **Teach-back and trust cues:** plain language, current status, plan source, uncertainty boundaries, and human escalation remain visible.
 - **Friction Intelligence:** de-identified interactions become operational signals across affordability, outcomes, and experience.
@@ -18,8 +19,11 @@ Vera is a deployable React proof of concept for the 2026 Aspire iTournament chal
 1. **Prescription affordability:** identify a 90-day home-delivery option with $312 in synthetic annual savings.
 2. **Behavioral-care access:** locate a synthetic in-network evening appointment with cost and referral clarity.
 3. **Prior-authorization navigation:** explain that an MRI request is in review—not denied—and prepare the missing-notes handoff.
+4. **Wellness device linking:** opt in a phone or wearable, receive habit guidance from weekly activity summaries, and show de-identified portfolio wellness metrics.
+5. **Health statement fact-check:** rate a submitted claim true, partly true, or completely false against a CDC / NIH / AHA library, and always show the source. Unmatched claims are not guessed.
+6. **Hospital location and pre-registration:** match an in-network facility from city-level IP or optional phone GPS, list what to bring, queue a simulated arrival packet, show check-in-to-recovery timing, and offer slower-but-stronger alternatives.
 
-All identities, benefits, claims, provider availability, status events, costs, and dashboard metrics are synthetic demonstration data.
+All identities, benefits, claims, provider availability, status events, costs, and dashboard metrics are synthetic demonstration data. Fact-check findings paraphrase public-health guidance and are not medical advice.
 
 ## Stack
 
@@ -82,7 +86,7 @@ Select **Try LiveAvatar** in the avatar panel. The session is requested only aft
 
 ### Built-in avatar
 
-The credential-free avatar is a single still portrait (`src/assets/vera-portrait.jpg`) with a jaw layer, mouth cavity, and eyelid layers composited over it, so Vera breathes, blinks, and speaks without any provider session. The face is **generated, not a real person**, and no likeness rights are implied; replacing it means retuning the landmark custom properties documented in `src/styles.css`. Motion is suppressed under `prefers-reduced-motion`.
+The credential-free avatar uses one of three generated still portraits, selected with the member profile control. A jaw layer, mouth cavity, and eyelid layers are composited over each portrait so Vera breathes, blinks, and speaks without any provider session. The faces are **generated, not real people**, and no likeness rights are implied; replacing one means retuning its landmark custom properties in `src/styles.css`. Motion is suppressed under `prefers-reduced-motion`.
 
 ## Validation
 

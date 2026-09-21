@@ -1,4 +1,4 @@
-import type { JourneyId } from "../types";
+import type { FactCheckResult, JourneyId } from "../types";
 
 export type ApiReplyMode = "demo" | "openai" | "demo-fallback";
 
@@ -9,9 +9,10 @@ export interface ConversationHistoryItem {
 
 export interface VeraApiReply {
   text: string;
-  intent: JourneyId | "safety" | "human-support" | "general";
+  intent: JourneyId | "safety" | "human-support" | "fact-check" | "general";
   planId?: JourneyId;
   mode: ApiReplyMode;
+  factCheck?: FactCheckResult;
 }
 
 export interface LiveAvatarEmbedReply {

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import portraitSrc from "../assets/vera-portrait.jpg";
-import type { AvatarStatus } from "../types";
+import type { AvatarStatus, MemberProfile } from "../types";
 
 const BLINK_CLOSED_MS = 150;
 const BLINK_GAP_MIN_MS = 3200;
@@ -8,6 +7,7 @@ const BLINK_GAP_MAX_MS = 7000;
 
 interface VeraPortraitProps {
   status: AvatarStatus;
+  profile: MemberProfile;
 }
 
 function prefersReducedMotion() {
@@ -20,10 +20,15 @@ function prefersReducedMotion() {
  * without a provider session. Landmark offsets live in styles.css as custom
  * properties because they are measured against this specific image.
  */
-export function VeraPortrait({ status }: VeraPortraitProps) {
+export function VeraPortrait({ status, profile }: VeraPortraitProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
   const [isBlinking, setIsBlinking] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(false);
+    setHasFailed(false);
+  }, [profile.id]);
 
   useEffect(() => {
     if (!isLoaded || prefersReducedMotion()) return;
@@ -61,15 +66,15 @@ export function VeraPortrait({ status }: VeraPortraitProps) {
   }, [status, isLoaded]);
 
   return (
-    <div className={`vera-photo${isBlinking ? " vera-photo--blinking" : ""}`}>
+    <div className={`vera-photo vera-photo--${profile.id}${isBlinking ? " vera-photo--blinking" : ""}`}>
       {/* Stays mounted underneath so a slow or failed image never leaves an empty stage. */}
-      <div className="vera-photo__placeholder">V</div>
+      <div className="vera-photo__placeholder">{profile.initials}</div>
 
       {!hasFailed && (
         <div className={`vera-photo__stage${isLoaded ? " vera-photo__stage--ready" : ""}`}>
           <img
             className="vera-photo__layer vera-photo__base"
-            src={portraitSrc}
+            src={profile.portraitSrc}
             alt=""
             draggable={false}
             decoding="async"
@@ -77,9 +82,9 @@ export function VeraPortrait({ status }: VeraPortraitProps) {
             onError={() => setHasFailed(true)}
           />
           <span className="vera-photo__mouth" />
-          <img className="vera-photo__layer vera-photo__jaw" src={portraitSrc} alt="" draggable={false} />
-          <img className="vera-photo__layer vera-photo__lid vera-photo__lid--left" src={portraitSrc} alt="" draggable={false} />
-          <img className="vera-photo__layer vera-photo__lid vera-photo__lid--right" src={portraitSrc} alt="" draggable={false} />
+          <img className="vera-photo__layer vera-photo__jaw" src={profile.portraitSrc} alt="" draggable={false} />
+          <img className="vera-photo__layer vera-photo__lid vera-photo__lid--left" src={profile.portraitSrc} alt="" draggable={false} />
+          <img className="vera-photo__layer vera-photo__lid vera-photo__lid--right" src={profile.portraitSrc} alt="" draggable={false} />
         </div>
       )}
 

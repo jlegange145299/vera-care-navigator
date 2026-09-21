@@ -1,11 +1,12 @@
 import { LoaderCircle, Mic, MicOff, Radio, Sparkles, Video, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { requestLiveAvatarEmbed } from "../lib/api";
-import type { AvatarStatus } from "../types";
+import type { AvatarStatus, MemberProfile } from "../types";
 import { VeraPortrait } from "./VeraPortrait";
 
 interface AvatarStageProps {
   status: AvatarStatus;
+  profile: MemberProfile;
   isListening: boolean;
   voiceSupported: boolean;
   interimTranscript: string;
@@ -27,6 +28,7 @@ const avatarErrorCopy = {
 
 export function AvatarStage({
   status,
+  profile,
   isListening,
   voiceSupported,
   interimTranscript,
@@ -75,11 +77,11 @@ export function AvatarStage({
   };
 
   return (
-    <section className={`avatar-stage avatar-stage--${status}`} aria-label="Vera digital guide">
+    <section className={`avatar-stage avatar-stage--${status}`} aria-label={profile.avatarLabel}>
       <div className="avatar-stage__glow avatar-stage__glow--one" aria-hidden="true" />
       <div className="avatar-stage__glow avatar-stage__glow--two" aria-hidden="true" />
       <div className="avatar-stage__topline">
-        <span className="live-pill"><Radio size={13} /> Interactive guide</span>
+        <span className="live-pill"><Radio size={13} /> Matched guide for {profile.firstName}</span>
         <button
           className="avatar-stage__mode"
           type="button"
@@ -108,7 +110,7 @@ export function AvatarStage({
             <div className="avatar-orbit avatar-orbit--one" />
             <div className="avatar-orbit avatar-orbit--two" />
             <div className="avatar-portrait">
-              <VeraPortrait status={status} />
+              <VeraPortrait status={status} profile={profile} />
             </div>
             <div className="avatar-spark avatar-spark--one"><Sparkles size={16} /></div>
             <div className="avatar-spark avatar-spark--two"><Sparkles size={12} /></div>
