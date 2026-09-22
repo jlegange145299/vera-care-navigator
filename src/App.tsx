@@ -146,38 +146,49 @@ function App() {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <button className="header-brand-button" type="button" onClick={() => navigate("member")} aria-label="Go to Vera member experience">
-          <BrandMark />
-        </button>
-        <nav className={`primary-nav ${mobileMenuOpen ? "primary-nav--open" : ""}`} aria-label="Primary navigation">
-          <button className={view === "member" ? "primary-nav__item--active" : ""} type="button" onClick={() => navigate("member")} aria-current={view === "member" ? "page" : undefined}><MessageCircle size={17} /> Member experience</button>
-          <button className={view === "insights" ? "primary-nav__item--active" : ""} type="button" onClick={() => navigate("insights")} aria-current={view === "insights" ? "page" : undefined}><BarChart3 size={17} /> Friction intelligence</button>
-        </nav>
-        <div className="header-actions">
-          <span className="header-privacy"><LockKeyhole size={14} /> Protected session</span>
-          <ProfileSwitcher profile={profile} onSelect={selectProfile} />
-          <button className="mobile-menu-button" type="button" onClick={() => setMobileMenuOpen((open) => !open)} aria-label="Toggle navigation" aria-expanded={mobileMenuOpen}>{mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}</button>
-        </div>
-      </header>
+      <div className="vera-phone">
+        <header className="app-header">
+          <button className="header-brand-button" type="button" onClick={() => navigate("member")} aria-label="Go to Vera member experience">
+            <BrandMark />
+          </button>
 
-      {view === "member" ? (
-        <MemberExperience
-          profile={profile}
-          messages={messages}
-          isThinking={isThinking}
-          isSpeaking={isSpeaking}
-          speechEnabled={speechEnabled}
-          completedActions={completedActions}
-          linkedDevices={linkedDevices}
-          locationMethod={locationMethod}
-          onSend={handleSend}
-          onCompleteAction={handleCompleteAction}
-          onToggleSpeech={toggleSpeech}
-        />
-      ) : (
-        <InsightsDashboard />
-      )}
+          <div className="header-actions">
+            <span className="header-privacy"><LockKeyhole size={14} /> Protected</span>
+            <ProfileSwitcher profile={profile} onSelect={selectProfile} />
+          </div>
+        </header>
+
+        <div className="app-content">
+          {view === "member" ? (
+            <MemberExperience
+              profile={profile}
+              messages={messages}
+              isThinking={isThinking}
+              isSpeaking={isSpeaking}
+              speechEnabled={speechEnabled}
+              completedActions={completedActions}
+              linkedDevices={linkedDevices}
+              locationMethod={locationMethod}
+              onSend={handleSend}
+              onCompleteAction={handleCompleteAction}
+              onToggleSpeech={toggleSpeech}
+            />
+          ) : (
+            <InsightsDashboard />
+          )}
+        </div>
+
+        <nav className="bottom-nav" aria-label="Primary navigation">
+          <button className={view === "member" ? "nav-tab nav-tab--active" : "nav-tab"} type="button" onClick={() => navigate("member")} aria-current={view === "member" ? "page" : undefined}>
+            <MessageCircle size={17} />
+            <span>Member</span>
+          </button>
+          <button className={view === "insights" ? "nav-tab nav-tab--active" : "nav-tab"} type="button" onClick={() => navigate("insights")} aria-current={view === "insights" ? "page" : undefined}>
+            <BarChart3 size={17} />
+            <span>Insights</span>
+          </button>
+        </nav>
+      </div>
 
       <DemoGuide onNavigate={navigate} />
     </div>
