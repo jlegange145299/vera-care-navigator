@@ -749,6 +749,21 @@ h3,
   background: #eeeaff;
 }
 
+.header-avatar-notice {
+  position: absolute;
+  top: 7.2rem;
+  right: 0;
+  width: min(210px, 52vw);
+  padding: 0.35rem 0.45rem;
+  border: 1px solid rgba(255, 141, 124, 0.45);
+  border-radius: 7px;
+  color: #8e3440;
+  background: #fff4f1;
+  font-size: 0.5rem;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
 .avatar-stage--header .avatar-portrait {
   width: 112px;
   height: 108px;

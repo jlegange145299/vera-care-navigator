@@ -145,6 +145,7 @@ export function AvatarStage({
           {isLaunching ? <LoaderCircle className="spin" size={11} /> : embedUrl ? <X size={11} /> : <Video size={11} />}
           {embedUrl ? "Close LiveAvatar" : "Try LiveAvatar"}
         </button>
+        {avatarNotice && <div className="header-avatar-notice" role="status">{avatarNotice}</div>}
       </div>
     );
   }
