@@ -28,7 +28,7 @@ function App() {
   const [locationMethod, setLocationMethod] = useState<"ip" | "gps">("ip");
   const requestRef = useRef<AbortController | null>(null);
   const appContentRef = useRef<HTMLDivElement>(null);
-  const { isSpeaking, speak, stop } = useSpeechOutput(speechEnabled, profile.genderLabel);
+  const { speak, stop } = useSpeechOutput(speechEnabled, profile.genderLabel);
 
   useEffect(
     () => () => {
