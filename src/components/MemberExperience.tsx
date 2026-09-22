@@ -24,7 +24,6 @@ interface MemberExperienceProps {
   profile: MemberProfile;
   messages: ChatMessage[];
   isThinking: boolean;
-  isSpeaking: boolean;
   speechEnabled: boolean;
   completedActions: Set<string>;
   linkedDevices: WellnessDeviceId[];
@@ -38,7 +37,6 @@ export function MemberExperience({
   profile,
   messages,
   isThinking,
-  isSpeaking,
   speechEnabled,
   completedActions,
   linkedDevices,

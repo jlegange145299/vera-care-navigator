@@ -3,7 +3,6 @@ import {
   Bot,
   BrainCircuit,
   Clock3,
-  Coffee,
   MoonStar,
   MessageSquareText,
   SendHorizonal,
@@ -21,6 +20,7 @@ interface WellnessBreakdownProps {
 }
 
 type WellnessTab = "overview" | "coach" | "chat";
+type WellnessMessage = { role: "assistant" | "user"; text: string };
 
 const scoreCards = [
   { label: "Sleep", value: "5.9h", avg: "6.8h avg", delta: "-0.9h", tone: "alert", note: "Insufficient sleep", icon: MoonStar },
@@ -70,7 +70,7 @@ const factCards = [
   },
 ];
 
-const defaultAssistantMessages = [
+const defaultAssistantMessages: WellnessMessage[] = [
   {
     role: "assistant" as const,
     text: "Your sleep is the biggest gap this week. I can help you improve it by checking a few habits like caffeine timing, bedroom noise, and sleep consistency.",

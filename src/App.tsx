@@ -184,7 +184,6 @@ function App() {
               profile={profile}
               messages={messages}
               isThinking={isThinking}
-              isSpeaking={isSpeaking}
               speechEnabled={speechEnabled}
               completedActions={completedActions}
               linkedDevices={linkedDevices}
