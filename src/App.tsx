@@ -28,7 +28,12 @@ function App() {
   const [locationMethod, setLocationMethod] = useState<"ip" | "gps">("ip");
   const requestRef = useRef<AbortController | null>(null);
   const appContentRef = useRef<HTMLDivElement>(null);
+  const liveAvatarPromptRef = useRef<((text: string) => void) | null>(null);
   const { speak, stop } = useSpeechOutput(speechEnabled, profile.genderLabel);
+
+  const handleLiveAvatarPromptReady = useCallback((sendPrompt: ((text: string) => void) | null) => {
+    liveAvatarPromptRef.current = sendPrompt;
+  }, []);
 
   useEffect(
     () => () => {
@@ -61,6 +66,7 @@ function App() {
       if (!text || isThinking) return;
 
       stop();
+      liveAvatarPromptRef.current?.(text);
       const history: ConversationHistoryItem[] = messages.slice(-8).map((message) => ({
         role: message.role,
         content: message.text,
@@ -175,6 +181,7 @@ function App() {
             voiceSupported={false}
             interimTranscript=""
             onToggleListening={() => undefined}
+            onPromptReady={handleLiveAvatarPromptReady}
           />
         </header>
 

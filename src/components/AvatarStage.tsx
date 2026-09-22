@@ -1,6 +1,7 @@
 import { LoaderCircle, Mic, MicOff, Radio, Sparkles, Video, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { requestLiveAvatarEmbed } from "../lib/api";
+import { LiveAvatarSession, SessionEvent } from "@heygen/liveavatar-web-sdk";
+import { requestLiveAvatarSession } from "../lib/api";
 import type { AvatarStatus, MemberProfile } from "../types";
 import { VeraPortrait } from "./VeraPortrait";
 
@@ -12,6 +13,7 @@ interface AvatarStageProps {
   interimTranscript: string;
   onToggleListening: () => void;
   compact?: boolean;
+  onPromptReady?: (sendPrompt: ((text: string) => void) | null) => void;
 }
 
 const statusCopy: Record<AvatarStatus, { label: string; detail: string }> = {
@@ -35,18 +37,23 @@ export function AvatarStage({
   interimTranscript,
   onToggleListening,
   compact = false,
+  onPromptReady,
 }: AvatarStageProps) {
   const copy = statusCopy[status];
-  const [embedUrl, setEmbedUrl] = useState<string | null>(null);
+  const [session, setSession] = useState<LiveAvatarSession | null>(null);
   const [avatarNotice, setAvatarNotice] = useState<string | null>(null);
   const [isLaunching, setIsLaunching] = useState(false);
   const requestRef = useRef<AbortController | null>(null);
+  const sessionRef = useRef<LiveAvatarSession | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(
     () => () => {
       requestRef.current?.abort();
+      sessionRef.current?.stop();
+      onPromptReady?.(null);
     },
-    [],
+    [onPromptReady],
   );
 
   const launchLiveAvatar = async () => {
@@ -57,11 +64,21 @@ export function AvatarStage({
     setAvatarNotice(null);
 
     try {
-      const embed = await requestLiveAvatarEmbed(controller.signal);
-      if (embed.available && embed.url) {
-        setEmbedUrl(embed.url);
+      const liveAvatar = await requestLiveAvatarSession(controller.signal);
+      if (liveAvatar.available && liveAvatar.sessionToken) {
+        const nextSession = new LiveAvatarSession(liveAvatar.sessionToken, {
+          autoKeepAlive: true,
+          voiceChat: { defaultMuted: true },
+        });
+        nextSession.on(SessionEvent.SESSION_STREAM_READY, () => {
+          if (videoRef.current) nextSession.attach(videoRef.current);
+        });
+        await nextSession.start();
+        sessionRef.current = nextSession;
+        setSession(nextSession);
+        onPromptReady?.((text) => nextSession.message(text));
       } else {
-        setAvatarNotice(avatarErrorCopy[embed.reason ?? "provider_unavailable"]);
+        setAvatarNotice(avatarErrorCopy[liveAvatar.reason ?? "provider_unavailable"]);
       }
     } catch {
       if (!controller.signal.aborted) setAvatarNotice(avatarErrorCopy.provider_unavailable);
@@ -74,7 +91,10 @@ export function AvatarStage({
   };
 
   const closeLiveAvatar = () => {
-    setEmbedUrl(null);
+    sessionRef.current?.stop();
+    sessionRef.current = null;
+    setSession(null);
+    onPromptReady?.(null);
     setAvatarNotice(null);
   };
 
@@ -87,24 +107,18 @@ export function AvatarStage({
         {!compact && <button
           className="avatar-stage__mode"
           type="button"
-          onClick={embedUrl ? closeLiveAvatar : launchLiveAvatar}
+          onClick={session ? closeLiveAvatar : launchLiveAvatar}
           disabled={isLaunching}
           title="Starts a LiveAvatar session only when explicitly selected"
         >
-          {isLaunching ? <LoaderCircle className="spin" size={13} /> : embedUrl ? <X size={13} /> : <Video size={13} />}
-          {embedUrl ? "Close LiveAvatar" : "Try LiveAvatar"}
+          {isLaunching ? <LoaderCircle className="spin" size={13} /> : session ? <X size={13} /> : <Video size={13} />}
+          {session ? "Close LiveAvatar" : "Try LiveAvatar"}
         </button>}
       </div>
 
-      {embedUrl ? (
+      {session ? (
         <div className="liveavatar-frame">
-          <iframe
-            src={embedUrl}
-            title="LiveAvatar session with Vera"
-            allow="microphone; camera; autoplay; clipboard-write"
-            referrerPolicy="no-referrer"
-          />
-          <div className="liveavatar-frame__label"><span className="status-dot" /> LiveAvatar session</div>
+          <video ref={videoRef} autoPlay playsInline muted aria-label="LiveAvatar session with Vera" />
         </div>
       ) : (
         <>
@@ -138,12 +152,12 @@ export function AvatarStage({
         <button
           className="header-liveavatar-button"
           type="button"
-          onClick={embedUrl ? closeLiveAvatar : launchLiveAvatar}
+          onClick={session ? closeLiveAvatar : launchLiveAvatar}
           disabled={isLaunching}
           title="Starts a LiveAvatar session only when explicitly selected"
         >
-          {isLaunching ? <LoaderCircle className="spin" size={11} /> : embedUrl ? <X size={11} /> : <Video size={11} />}
-          {embedUrl ? "Close LiveAvatar" : "Try LiveAvatar"}
+          {isLaunching ? <LoaderCircle className="spin" size={11} /> : session ? <X size={11} /> : <Video size={11} />}
+          {session ? "Close LiveAvatar" : "Try LiveAvatar"}
         </button>
         {avatarNotice && <div className="header-avatar-notice" role="status">{avatarNotice}</div>}
       </div>

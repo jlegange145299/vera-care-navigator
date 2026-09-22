@@ -15,9 +15,9 @@ export interface VeraApiReply {
   factCheck?: FactCheckResult;
 }
 
-export interface LiveAvatarEmbedReply {
+export interface LiveAvatarSessionReply {
   available: boolean;
-  url?: string;
+  sessionToken?: string;
   reason?: "not_configured" | "provider_unavailable" | "invalid_provider_response";
 }
 
@@ -45,8 +45,8 @@ export async function requestVeraReply(
   return data;
 }
 
-export async function requestLiveAvatarEmbed(signal?: AbortSignal): Promise<LiveAvatarEmbedReply> {
-  const response = await fetch("/api/avatar/embed", {
+export async function requestLiveAvatarSession(signal?: AbortSignal): Promise<LiveAvatarSessionReply> {
+  const response = await fetch("/api/avatar/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: "{}",
@@ -58,5 +58,5 @@ export async function requestLiveAvatarEmbed(signal?: AbortSignal): Promise<Live
   if (!data || typeof data !== "object" || typeof (data as Record<string, unknown>).available !== "boolean") {
     throw new Error("Avatar API returned an invalid response");
   }
-  return data as LiveAvatarEmbedReply;
+  return data as LiveAvatarSessionReply;
 }

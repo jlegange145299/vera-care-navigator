@@ -1,6 +1,6 @@
-interface LiveAvatarEmbedResult {
+interface LiveAvatarSessionResult {
   available: boolean;
-  url?: string;
+  session_token?: string;
   reason?: "not_configured" | "provider_unavailable" | "invalid_provider_response";
 }
 
@@ -13,52 +13,23 @@ function extractString(source: unknown, keys: string[]): string | undefined {
   return undefined;
 }
 
-function extractEmbedUrl(payload: unknown) {
-  const direct = extractString(payload, ["url", "embed_url", "embedUrl"]);
-  if (direct) return direct;
-
-  if (payload && typeof payload === "object") {
-    const nested = (payload as Record<string, unknown>).data;
-    const nestedUrl = extractString(nested, ["url", "embed_url", "embedUrl"]);
-    if (nestedUrl) return nestedUrl;
-
-    const script = extractString(payload, ["script"]) ?? extractString(nested, ["script"]);
-    const scriptSource = script?.match(/src=["']([^"']+)["']/i)?.[1];
-    if (scriptSource) return scriptSource;
-  }
-
-  return undefined;
-}
-
-function isAllowedEmbedUrl(candidate: string) {
-  try {
-    const url = new URL(candidate);
-    const configuredHosts = (process.env.LIVEAVATAR_ALLOWED_HOSTS ?? "liveavatar.com,heygen.com")
-      .split(",")
-      .map((host) => host.trim().toLowerCase())
-      .filter(Boolean);
-
-    return (
-      url.protocol === "https:" &&
-      configuredHosts.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`))
-    );
-  } catch {
-    return false;
-  }
-}
-
-export async function createLiveAvatarEmbed(): Promise<LiveAvatarEmbedResult> {
+export async function createLiveAvatarSession(): Promise<LiveAvatarSessionResult> {
   const apiKey = process.env.LIVEAVATAR_API_KEY;
   if (!apiKey) {
     return { available: false, reason: "not_configured" };
   }
 
   const baseUrl = (process.env.LIVEAVATAR_BASE_URL ?? "https://api.liveavatar.com").replace(/\/$/, "");
-  const endpoint = process.env.LIVEAVATAR_EMBED_ENDPOINT ?? `${baseUrl}/v2/embeddings`;
-  const payload: Record<string, string> = {};
-
-  if (process.env.LIVEAVATAR_AVATAR_ID) payload.avatar_id = process.env.LIVEAVATAR_AVATAR_ID;
-  if (process.env.LIVEAVATAR_CONTEXT_ID) payload.context_id = process.env.LIVEAVATAR_CONTEXT_ID;
+  const endpoint = process.env.LIVEAVATAR_SESSION_TOKEN_ENDPOINT ?? `${baseUrl}/v1/sessions/token`;
+  const payload = {
+    mode: "FULL",
+    avatar_id: process.env.LIVEAVATAR_AVATAR_ID,
+    avatar_persona: {
+      voice_id: process.env.LIVEAVATAR_VOICE_ID,
+      context_id: process.env.LIVEAVATAR_CONTEXT_ID,
+      language: process.env.LIVEAVATAR_LANGUAGE ?? "en",
+    },
+  };
 
   try {
     const upstreamResponse = await fetch(endpoint, {
@@ -76,14 +47,14 @@ export async function createLiveAvatarEmbed(): Promise<LiveAvatarEmbedResult> {
       return { available: false, reason: "provider_unavailable" };
     }
 
-    const data = (await upstreamResponse.json()) as unknown;
-    const url = extractEmbedUrl(data);
-    if (!url || !isAllowedEmbedUrl(url)) {
-      console.warn("LiveAvatar returned an invalid or untrusted embed URL.");
+    const data = (await upstreamResponse.json()) as Record<string, unknown>;
+    const sessionToken = extractString(data, ["session_token", "sessionToken"]);
+    if (!sessionToken) {
+      console.warn("LiveAvatar returned no session token.");
       return { available: false, reason: "invalid_provider_response" };
     }
 
-    return { available: true, url };
+    return { available: true, session_token: sessionToken };
   } catch (error) {
     const errorName = error instanceof Error ? error.name : "UnknownError";
     console.warn(`LiveAvatar request failed (${errorName}).`);

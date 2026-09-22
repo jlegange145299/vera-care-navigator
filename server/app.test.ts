@@ -117,7 +117,7 @@ describe("Vera API", () => {
   });
 
   it("keeps LiveAvatar optional when no provider key is configured", async () => {
-    const response = await request(createApp()).post("/api/avatar/embed").send({}).expect(200);
+    const response = await request(createApp()).post("/api/avatar/session").send({}).expect(200);
 
     expect(response.body).toEqual({ available: false, reason: "not_configured" });
   });

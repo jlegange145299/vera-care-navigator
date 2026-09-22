@@ -5,7 +5,7 @@ import express, { type ErrorRequestHandler } from "express";
 import { rateLimit } from "express-rate-limit";
 import helmet from "helmet";
 import { z } from "zod";
-import { createLiveAvatarEmbed } from "./liveAvatar.js";
+import { createLiveAvatarSession } from "./liveAvatar.js";
 import { generateVeraReply } from "./vera.js";
 
 const chatRequestSchema = z
@@ -96,9 +96,13 @@ export function createApp() {
   });
 
   // Sessions are billable, so this endpoint is called only after an explicit user click.
-  app.post("/api/avatar/embed", createRateLimiter(5), async (_request, response) => {
-    const embed = await createLiveAvatarEmbed();
-    response.json(embed);
+  app.post("/api/avatar/session", createRateLimiter(5), async (_request, response) => {
+    const session = await createLiveAvatarSession();
+    response.json({
+      available: session.available,
+      sessionToken: session.session_token,
+      reason: session.reason,
+    });
   });
 
   app.use("/api", (_request, response) => {
