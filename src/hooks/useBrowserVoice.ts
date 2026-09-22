@@ -110,23 +110,32 @@ export function useVoiceInput(onFinalTranscript: (transcript: string) => void) {
   return { error, interimTranscript, isListening, isSupported, start, stop, toggle };
 }
 
-const likelyFemaleVoiceName = /female|sonia|libby|hazel|serena|kate|susan|abbi|maisie|martha|fiona|samantha|aria|jenny|zira|victoria|karen|moira|tessa/i;
+const likelyFemaleVoiceName = /female|sonia|libby|hazel|serena|kate|susan|abbi|maisie|martha|fiona|samantha|aria|jenny|zira|victoria|karen|moira|tessa|emma|olivia|alice|sophie/i;
+const likelyMaleVoiceName = /male|david|daniel|mark|james|george|adam|jack|john|paul|oliver|liam|charles|ben|michael|robert|henry|jason|harry/i;
 
 function normalizedLanguage(voice: SpeechSynthesisVoice) {
   return voice.lang.toLowerCase().replace("_", "-");
 }
 
-export function selectPreferredBritishVoice(voices: SpeechSynthesisVoice[]) {
+function selectPreferredVoiceByGender(voices: SpeechSynthesisVoice[], preferredGender?: string) {
+  const targetGender = preferredGender?.toLowerCase();
   const isEnglish = (voice: SpeechSynthesisVoice) => normalizedLanguage(voice).startsWith("en");
   const isBritish = (voice: SpeechSynthesisVoice) => normalizedLanguage(voice).startsWith("en-gb");
   const isLikelyFemale = (voice: SpeechSynthesisVoice) => likelyFemaleVoiceName.test(voice.name);
+  const isLikelyMale = (voice: SpeechSynthesisVoice) => likelyMaleVoiceName.test(voice.name);
+  const isTargetGender = (voice: SpeechSynthesisVoice) => {
+    if (!targetGender) return true;
+    if (targetGender.includes("wom") || targetGender.includes("fem")) return isLikelyFemale(voice);
+    if (targetGender.includes("man") || targetGender.includes("male")) return isLikelyMale(voice);
+    return true;
+  };
   const firstMatch = (predicate: (voice: SpeechSynthesisVoice) => boolean) => voices.find(predicate);
 
   return (
-    firstMatch((voice) => isBritish(voice) && isLikelyFemale(voice) && voice.localService) ??
-    firstMatch((voice) => isBritish(voice) && isLikelyFemale(voice)) ??
-    firstMatch((voice) => isEnglish(voice) && isLikelyFemale(voice) && voice.localService) ??
-    firstMatch((voice) => isEnglish(voice) && isLikelyFemale(voice)) ??
+    firstMatch((voice) => isBritish(voice) && isTargetGender(voice) && voice.localService) ??
+    firstMatch((voice) => isBritish(voice) && isTargetGender(voice)) ??
+    firstMatch((voice) => isEnglish(voice) && isTargetGender(voice) && voice.localService) ??
+    firstMatch((voice) => isEnglish(voice) && isTargetGender(voice)) ??
     firstMatch((voice) => isBritish(voice) && voice.localService) ??
     firstMatch(isBritish) ??
     firstMatch((voice) => isEnglish(voice) && voice.localService) ??
@@ -134,7 +143,11 @@ export function selectPreferredBritishVoice(voices: SpeechSynthesisVoice[]) {
   );
 }
 
-export function useSpeechOutput(enabled: boolean) {
+export function selectPreferredBritishVoice(voices: SpeechSynthesisVoice[]) {
+  return selectPreferredVoiceByGender(voices, "female");
+}
+
+export function useSpeechOutput(enabled: boolean, preferredGender?: string) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const isSupported = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
@@ -167,8 +180,9 @@ export function useSpeechOutput(enabled: boolean) {
       const utterance = new SpeechSynthesisUtterance(text);
       const currentVoices = window.speechSynthesis.getVoices();
       if (currentVoices.length > 0) voicesRef.current = currentVoices;
-      const preferredVoice = selectPreferredBritishVoice(
+      const preferredVoice = selectPreferredVoiceByGender(
         currentVoices.length > 0 ? currentVoices : voicesRef.current,
+        preferredGender,
       );
 
       if (preferredVoice) utterance.voice = preferredVoice;
@@ -193,7 +207,7 @@ export function useSpeechOutput(enabled: boolean) {
       };
       window.speechSynthesis.speak(utterance);
     },
-    [enabled, isSupported],
+    [enabled, isSupported, preferredGender],
   );
 
   useEffect(() => stop, [stop]);

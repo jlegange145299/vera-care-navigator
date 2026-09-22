@@ -11,6 +11,7 @@ interface AvatarStageProps {
   voiceSupported: boolean;
   interimTranscript: string;
   onToggleListening: () => void;
+  compact?: boolean;
 }
 
 const statusCopy: Record<AvatarStatus, { label: string; detail: string }> = {
@@ -33,6 +34,7 @@ export function AvatarStage({
   voiceSupported,
   interimTranscript,
   onToggleListening,
+  compact = false,
 }: AvatarStageProps) {
   const copy = statusCopy[status];
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
@@ -76,13 +78,13 @@ export function AvatarStage({
     setAvatarNotice(null);
   };
 
-  return (
-    <section className={`avatar-stage avatar-stage--${status}`} aria-label={profile.avatarLabel}>
+  const avatarStage = (
+    <section className={`avatar-stage avatar-stage--${status}${compact ? " avatar-stage--header" : ""}`} aria-label={profile.avatarLabel}>
       <div className="avatar-stage__glow avatar-stage__glow--one" aria-hidden="true" />
       <div className="avatar-stage__glow avatar-stage__glow--two" aria-hidden="true" />
       <div className="avatar-stage__topline">
         <span className="live-pill"><Radio size={13} /> Matched guide for {profile.firstName}</span>
-        <button
+        {!compact && <button
           className="avatar-stage__mode"
           type="button"
           onClick={embedUrl ? closeLiveAvatar : launchLiveAvatar}
@@ -91,7 +93,7 @@ export function AvatarStage({
         >
           {isLaunching ? <LoaderCircle className="spin" size={13} /> : embedUrl ? <X size={13} /> : <Video size={13} />}
           {embedUrl ? "Close LiveAvatar" : "Try LiveAvatar"}
-        </button>
+        </button>}
       </div>
 
       {embedUrl ? (
@@ -128,4 +130,24 @@ export function AvatarStage({
       )}
     </section>
   );
+
+  if (compact) {
+    return (
+      <div className="header-avatar-slot">
+        {avatarStage}
+        <button
+          className="header-liveavatar-button"
+          type="button"
+          onClick={embedUrl ? closeLiveAvatar : launchLiveAvatar}
+          disabled={isLaunching}
+          title="Starts a LiveAvatar session only when explicitly selected"
+        >
+          {isLaunching ? <LoaderCircle className="spin" size={11} /> : embedUrl ? <X size={11} /> : <Video size={11} />}
+          {embedUrl ? "Close LiveAvatar" : "Try LiveAvatar"}
+        </button>
+      </div>
+    );
+  }
+
+  return avatarStage;
 }

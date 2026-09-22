@@ -10,7 +10,7 @@ export const memberProfiles: MemberProfile[] = [
     fullName: "Jordan Lee",
     initials: "JL",
     age: 42,
-    genderLabel: "Member",
+    genderLabel: "Woman",
     city: "Bloomfield",
     region: "CT",
     country: "United States",

@@ -1,10 +1,12 @@
-import { BarChart3, LockKeyhole, Menu, MessageCircle, X } from "lucide-react";
+import { BriefcaseBusiness, LockKeyhole, MessageCircle, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrandMark } from "./components/BrandMark";
 import { DemoGuide } from "./components/DemoGuide";
 import { InsightsDashboard } from "./components/InsightsDashboard";
 import { MemberExperience } from "./components/MemberExperience";
 import { ProfileSwitcher } from "./components/ProfileSwitcher";
+import { AvatarStage } from "./components/AvatarStage";
+import { WellnessBreakdown } from "./components/WellnessBreakdown";
 import { demoScenarios, getActionConfirmation, getDemoReply } from "./data/demoData";
 import { createWelcomeMessage, defaultMemberProfile } from "./data/memberProfiles";
 import { useSpeechOutput } from "./hooks/useBrowserVoice";
@@ -17,7 +19,6 @@ function createMessageId(prefix: string) {
 
 function App() {
   const [view, setView] = useState<ExperienceView>("member");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profile, setProfile] = useState(defaultMemberProfile);
   const [messages, setMessages] = useState<ChatMessage[]>([createWelcomeMessage(defaultMemberProfile)]);
   const [isThinking, setIsThinking] = useState(false);
@@ -26,7 +27,8 @@ function App() {
   const [linkedDevices, setLinkedDevices] = useState<WellnessDeviceId[]>([]);
   const [locationMethod, setLocationMethod] = useState<"ip" | "gps">("ip");
   const requestRef = useRef<AbortController | null>(null);
-  const { isSpeaking, speak, stop } = useSpeechOutput(speechEnabled);
+  const appContentRef = useRef<HTMLDivElement>(null);
+  const { isSpeaking, speak, stop } = useSpeechOutput(speechEnabled, profile.genderLabel);
 
   useEffect(
     () => () => {
@@ -37,8 +39,7 @@ function App() {
 
   const navigate = (nextView: ExperienceView) => {
     setView(nextView);
-    setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    appContentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const selectProfile = (nextProfile: typeof profile) => {
@@ -153,12 +154,31 @@ function App() {
           </button>
 
           <div className="header-actions">
+            <button
+                className={view === "insights" ? "business-insights-button business-insights-button--active" : "business-insights-button"}
+                type="button"
+                onClick={() => navigate("insights")}
+                aria-current={view === "insights" ? "page" : undefined}
+                aria-label="Open business-only Friction Intelligence"
+              >
+                <BriefcaseBusiness size={15} />
+                <span><strong>Business</strong><small>Friction Intelligence</small></span>
+            </button>
             <span className="header-privacy"><LockKeyhole size={14} /> Protected</span>
             <ProfileSwitcher profile={profile} onSelect={selectProfile} />
           </div>
+          <AvatarStage
+            compact
+            profile={profile}
+            status="idle"
+            isListening={false}
+            voiceSupported={false}
+            interimTranscript=""
+            onToggleListening={() => undefined}
+          />
         </header>
 
-        <div className="app-content">
+        <div className="app-content" ref={appContentRef}>
           {view === "member" ? (
             <MemberExperience
               profile={profile}
@@ -173,6 +193,8 @@ function App() {
               onCompleteAction={handleCompleteAction}
               onToggleSpeech={toggleSpeech}
             />
+          ) : view === "wellness" ? (
+            <WellnessBreakdown profile={profile} />
           ) : (
             <InsightsDashboard />
           )}
@@ -181,11 +203,11 @@ function App() {
         <nav className="bottom-nav" aria-label="Primary navigation">
           <button className={view === "member" ? "nav-tab nav-tab--active" : "nav-tab"} type="button" onClick={() => navigate("member")} aria-current={view === "member" ? "page" : undefined}>
             <MessageCircle size={17} />
-            <span>Member</span>
+            <span>Home</span>
           </button>
-          <button className={view === "insights" ? "nav-tab nav-tab--active" : "nav-tab"} type="button" onClick={() => navigate("insights")} aria-current={view === "insights" ? "page" : undefined}>
-            <BarChart3 size={17} />
-            <span>Insights</span>
+          <button className={view === "wellness" ? "nav-tab nav-tab--active" : "nav-tab"} type="button" onClick={() => navigate("wellness")} aria-current={view === "wellness" ? "page" : undefined}>
+            <Sparkles size={17} />
+            <span>Wellness</span>
           </button>
         </nav>
       </div>

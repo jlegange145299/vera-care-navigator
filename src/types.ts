@@ -1,4 +1,4 @@
-export type ExperienceView = "member" | "insights";
+export type ExperienceView = "member" | "wellness" | "insights";
 
 export type AvatarStatus = "idle" | "listening" | "thinking" | "speaking";
 

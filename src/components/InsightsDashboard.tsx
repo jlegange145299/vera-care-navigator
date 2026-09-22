@@ -60,7 +60,7 @@ export function InsightsDashboard() {
     <main className="insights-page">
       <section className="insights-hero">
         <div>
-          <span className="page-eyebrow"><Sparkles size={14} /> Friction Intelligence</span>
+          <span className="page-eyebrow"><Sparkles size={14} /> Business-only · Friction Intelligence</span>
           <h1>See where value gets stuck.<br /><em>Then help it move.</em></h1>
           <p>De-identified conversation signals reveal unmet needs, quantify avoidable friction, and show which interventions improve affordability, outcomes, and experience.</p>
         </div>

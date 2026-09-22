@@ -14,9 +14,8 @@ import {
 import { demoScenarios } from "../data/demoData";
 import { factCheckPrompt } from "../data/factCheck";
 import { useVoiceInput } from "../hooks/useBrowserVoice";
-import type { ActionCompletion, ActionPlan, AvatarStatus, ChatMessage, MemberProfile, WellnessDeviceId } from "../types";
+import type { ActionCompletion, ActionPlan, ChatMessage, MemberProfile, WellnessDeviceId } from "../types";
 import { ActionCard } from "./ActionCard";
-import { AvatarStage } from "./AvatarStage";
 import { FactCheckCard } from "./FactCheckCard";
 import { HospitalPrepCard } from "./HospitalPrepCard";
 import { WellnessPulse } from "./WellnessPulse";
@@ -57,15 +56,7 @@ export function MemberExperience({
     },
     [onSend],
   );
-  const { error, interimTranscript, isListening, isSupported, toggle } = useVoiceInput(handleVoiceResult);
-
-  const avatarStatus: AvatarStatus = isListening
-    ? "listening"
-    : isThinking
-      ? "thinking"
-      : isSpeaking
-        ? "speaking"
-        : "idle";
+  const { error, isListening, isSupported, toggle } = useVoiceInput(handleVoiceResult);
 
   useEffect(() => {
     feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: "smooth" });
@@ -103,15 +94,6 @@ export function MemberExperience({
       </section>
 
       <section className="experience-shell">
-        <AvatarStage
-          profile={profile}
-          status={avatarStatus}
-          isListening={isListening}
-          voiceSupported={isSupported}
-          interimTranscript={interimTranscript}
-          onToggleListening={toggle}
-        />
-
         <section className="conversation-panel" aria-label="Conversation with Vera">
           <header className="conversation-header">
             <div>
@@ -146,6 +128,12 @@ export function MemberExperience({
                   <div className="message-bubble">
                     <p>{message.text}</p>
                   </div>
+                  {message.role === "assistant" && message.plan && (
+                    <div className="response-avatar-cameo" aria-label={`Vera answered ${profile.firstName}`}>
+                      <img src={profile.portraitSrc} alt="" />
+                      <span>Vera</span>
+                    </div>
+                  )}
                   {message.factCheck && <FactCheckCard result={message.factCheck} />}
                   {message.plan?.facilities ? (
                     <HospitalPrepCard
