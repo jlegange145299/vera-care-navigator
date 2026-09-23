@@ -1,0 +1,19 @@
+/* iOS Safari tweaks for Expo web export */
+html,
+body,
+#root {
+  height: 100%;
+  min-height: -webkit-fill-available;
+}
+
+body {
+  margin: 0;
+  overscroll-behavior-y: none;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+input,
+textarea {
+  font-size: 16px;
+}

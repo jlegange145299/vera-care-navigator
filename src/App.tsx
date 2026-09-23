@@ -215,6 +215,10 @@ function App() {
             <Sparkles size={17} />
             <span>Wellness</span>
           </button>
+          <button className={view === "insights" ? "nav-tab nav-tab--active" : "nav-tab"} type="button" onClick={() => navigate("insights")} aria-current={view === "insights" ? "page" : undefined}>
+            <BriefcaseBusiness size={17} />
+            <span>Business</span>
+          </button>
         </nav>
       </div>
 

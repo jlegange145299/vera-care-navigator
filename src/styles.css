@@ -41,6 +41,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   background: #f3f6fb;
 }
 
@@ -4356,5 +4357,65 @@ h3,
   .liveavatar-frame,
   .liveavatar-frame iframe {
     min-height: 430px;
+  }
+}
+
+/* Desktop browser: full-width app shell (not a phone bezel) */
+@media (min-width: 1024px) {
+  .app-shell {
+    padding: 1.25rem 2rem 2rem;
+    align-items: stretch;
+  }
+
+  .vera-phone {
+    width: min(100%, 1180px);
+    height: auto;
+    min-height: min(92vh, 920px);
+    max-height: none;
+    margin: 0 auto;
+    border: none;
+    border-radius: 22px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .vera-phone::before {
+    display: none;
+  }
+
+  .app-header {
+    min-height: 190px;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .app-content {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .member-page {
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  }
+
+  .conversation-panel {
+    min-height: 520px;
+  }
+
+  textarea,
+  .composer textarea {
+    font-size: 1rem;
+  }
+}
+
+/* Touch-friendly targets on narrow viewports */
+@media (max-width: 640px) {
+  .nav-tab,
+  .composer__send,
+  .composer__voice,
+  .prompt-row button {
+    min-height: 44px;
+  }
+
+  .composer textarea {
+    font-size: 16px;
   }
 }
