@@ -3,7 +3,7 @@ services:
     name: vera-care-navigator
     runtime: node
     plan: free
-    buildCommand: npm ci --include=dev && npm run build
+    buildCommand: NPM_CONFIG_PRODUCTION=false npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
@@ -22,7 +22,7 @@ services:
   - type: web
     name: vera-mobile-web
     runtime: static
-    buildCommand: npm ci --include=dev && npm run build:mobile
+    buildCommand: NPM_CONFIG_PRODUCTION=false npm ci && npm run build:mobile
     staticPublishPath: apps/mobile/dist
     pullRequestPreviewsEnabled: true
     envVars:
