@@ -3,9 +3,9 @@ import { createWelcomeMessage, defaultMemberProfileId, memberProfileRecords } fr
 import type { MemberProfile, MemberProfileId } from "@vera/core";
 
 const portraitById: Record<MemberProfileId, ImageSourcePropType> = {
-  jordan: require("../../assets/vera-portrait.jpg"),
-  noor: require("../../assets/noor-profile.png"),
-  josh: require("../../assets/josh-profile.png"),
+  jordan: require("../assets/vera-portrait.jpg"),
+  noor: require("../assets/noor-profile.png"),
+  josh: require("../assets/josh-profile.png"),
 };
 
 export const memberProfiles: MemberProfile[] = memberProfileRecords.map((record) => ({

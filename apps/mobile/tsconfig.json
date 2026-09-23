@@ -1,10 +1,7 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
-    "paths": {
-      "@vera/core": ["../../packages/core/src/index.ts"]
-    }
+    "strict": true
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }

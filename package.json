@@ -27,7 +27,8 @@
     "test:watch": "vitest --config vitest.config.ts",
     "check": "npm run typecheck && npm test && npm run build",
     "dev:mobile": "npm run start -w vera-mobile",
-    "build:mobile": "npm run export:web -w vera-mobile"
+    "build:mobile": "npm run build:core && npm run export:web -w vera-mobile",
+    "postinstall": "node scripts/link-mobile-expo.mjs"
   },
   "dependencies": {
     "@vera/core": "0.1.0",
