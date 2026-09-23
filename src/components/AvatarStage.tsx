@@ -13,6 +13,7 @@ interface AvatarStageProps {
   interimTranscript: string;
   onToggleListening: () => void;
   compact?: boolean;
+  featured?: boolean;
   onPromptReady?: (sendPrompt: ((text: string) => void) | null) => void;
 }
 
@@ -37,6 +38,7 @@ export function AvatarStage({
   interimTranscript,
   onToggleListening,
   compact = false,
+  featured = false,
   onPromptReady,
 }: AvatarStageProps) {
   const copy = statusCopy[status];
@@ -99,12 +101,15 @@ export function AvatarStage({
   };
 
   const avatarStage = (
-    <section className={`avatar-stage avatar-stage--${status}${compact ? " avatar-stage--header" : ""}`} aria-label={profile.avatarLabel}>
+    <section
+      className={`avatar-stage avatar-stage--${status}${compact ? " avatar-stage--header" : ""}${featured ? " avatar-stage--featured" : ""}`}
+      aria-label={profile.avatarLabel}
+    >
       <div className="avatar-stage__glow avatar-stage__glow--one" aria-hidden="true" />
       <div className="avatar-stage__glow avatar-stage__glow--two" aria-hidden="true" />
       <div className="avatar-stage__topline">
         <span className="live-pill"><Radio size={13} /> Matched guide for {profile.firstName}</span>
-        {!compact && <button
+        {!compact && !featured && <button
           className="avatar-stage__mode"
           type="button"
           onClick={session ? closeLiveAvatar : launchLiveAvatar}
@@ -114,6 +119,18 @@ export function AvatarStage({
           {isLaunching ? <LoaderCircle className="spin" size={13} /> : session ? <X size={13} /> : <Video size={13} />}
           {session ? "Close LiveAvatar" : "Try LiveAvatar"}
         </button>}
+        {featured && (
+          <button
+            className="avatar-stage__mode avatar-stage__mode--featured"
+            type="button"
+            onClick={session ? closeLiveAvatar : launchLiveAvatar}
+            disabled={isLaunching}
+            title="Starts a LiveAvatar session only when explicitly selected"
+          >
+            {isLaunching ? <LoaderCircle className="spin" size={13} /> : session ? <X size={13} /> : <Video size={13} />}
+            {session ? "Close LiveAvatar" : "Try LiveAvatar"}
+          </button>
+        )}
       </div>
 
       {session ? (
@@ -138,8 +155,12 @@ export function AvatarStage({
           </div>
 
           {avatarNotice && <div className="avatar-notice" role="status">{avatarNotice}</div>}
-          <button className={`voice-orb ${isListening ? "voice-orb--active" : ""}`} type="button" onClick={onToggleListening} disabled={!voiceSupported} aria-pressed={isListening} aria-label={isListening ? "Stop listening" : "Talk to Vera"}>{isListening ? <MicOff size={24} /> : <Mic size={24} />}</button>
-          <span className="voice-orb__label">{voiceSupported ? (isListening ? "Tap to stop" : "Tap to talk") : "Voice needs Chrome or Edge"}</span>
+          {!featured && (
+            <>
+              <button className={`voice-orb ${isListening ? "voice-orb--active" : ""}`} type="button" onClick={onToggleListening} disabled={!voiceSupported} aria-pressed={isListening} aria-label={isListening ? "Stop listening" : "Talk to Vera"}>{isListening ? <MicOff size={24} /> : <Mic size={24} />}</button>
+              <span className="voice-orb__label">{voiceSupported ? (isListening ? "Tap to stop" : "Tap to talk") : "Voice needs Chrome or Edge"}</span>
+            </>
+          )}
         </>
       )}
     </section>

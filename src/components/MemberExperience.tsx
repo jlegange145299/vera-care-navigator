@@ -14,8 +14,9 @@ import {
 import { demoScenarios } from "../data/demoData";
 import { factCheckPrompt } from "../data/factCheck";
 import { useVoiceInput } from "../hooks/useBrowserVoice";
-import type { ActionCompletion, ActionPlan, ChatMessage, MemberProfile, WellnessDeviceId } from "../types";
+import type { ActionCompletion, ActionPlan, AvatarStatus, ChatMessage, MemberProfile, WellnessDeviceId } from "../types";
 import { ActionCard } from "./ActionCard";
+import { AvatarStage } from "./AvatarStage";
 import { FactCheckCard } from "./FactCheckCard";
 import { HospitalPrepCard } from "./HospitalPrepCard";
 import { WellnessPulse } from "./WellnessPulse";
@@ -24,6 +25,7 @@ interface MemberExperienceProps {
   profile: MemberProfile;
   messages: ChatMessage[];
   isThinking: boolean;
+  isSpeaking: boolean;
   speechEnabled: boolean;
   completedActions: Set<string>;
   linkedDevices: WellnessDeviceId[];
@@ -31,12 +33,14 @@ interface MemberExperienceProps {
   onSend: (message: string) => void;
   onCompleteAction: (plan: ActionPlan, extras?: ActionCompletion) => void;
   onToggleSpeech: () => void;
+  onLiveAvatarPromptReady: (sendPrompt: ((text: string) => void) | null) => void;
 }
 
 export function MemberExperience({
   profile,
   messages,
   isThinking,
+  isSpeaking,
   speechEnabled,
   completedActions,
   linkedDevices,
@@ -44,6 +48,7 @@ export function MemberExperience({
   onSend,
   onCompleteAction,
   onToggleSpeech,
+  onLiveAvatarPromptReady,
 }: MemberExperienceProps) {
   const [draft, setDraft] = useState("");
   const feedRef = useRef<HTMLDivElement>(null);
@@ -54,7 +59,15 @@ export function MemberExperience({
     },
     [onSend],
   );
-  const { error, isListening, isSupported, toggle } = useVoiceInput(handleVoiceResult);
+  const { error, interimTranscript, isListening, isSupported, toggle } = useVoiceInput(handleVoiceResult);
+
+  const avatarStatus: AvatarStatus = isListening
+    ? "listening"
+    : isThinking
+      ? "thinking"
+      : isSpeaking
+        ? "speaking"
+        : "idle";
 
   useEffect(() => {
     feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: "smooth" });
@@ -80,26 +93,71 @@ export function MemberExperience({
       <section className="member-context" aria-label="Synthetic member context">
         <div className="member-context__welcome">
           <img className="member-avatar" src={profile.portraitSrc} alt="" />
-          <div><span>{profile.greeting}</span><strong>{profile.fullName}</strong></div>
+          <div>
+            <span>{profile.greeting}</span>
+            <strong>{profile.fullName}</strong>
+          </div>
         </div>
         <div className="context-divider" />
-        <div className="context-item"><span>Profile</span><strong>{profile.age} · {profile.genderLabel}</strong></div>
-        <div className="context-item"><span>Plan</span><strong>{profile.plan}</strong></div>
-        <div className="context-item"><span>Coverage</span><strong>{profile.coverage}</strong></div>
-        <div className="context-item"><span>Location</span><strong>{profile.city}, {profile.region} · {locationMethod.toUpperCase()}</strong></div>
-        <div className="context-item"><span>Wellness</span><strong>{linkedDevices.length ? `${linkedDevices.length} device${linkedDevices.length === 1 ? "" : "s"} linked` : "Not linked"}</strong></div>
-        <div className="context-item context-item--verified"><ShieldCheck size={16} /><span><strong>Identity verified</strong><small>Synthetic profile</small></span></div>
+        <div className="context-item">
+          <span>Profile</span>
+          <strong>
+            {profile.age} · {profile.genderLabel}
+          </strong>
+        </div>
+        <div className="context-item">
+          <span>Plan</span>
+          <strong>{profile.plan}</strong>
+        </div>
+        <div className="context-item">
+          <span>Coverage</span>
+          <strong>{profile.coverage}</strong>
+        </div>
+        <div className="context-item">
+          <span>Location</span>
+          <strong>
+            {profile.city}, {profile.region} · {locationMethod.toUpperCase()}
+          </strong>
+        </div>
+        <div className="context-item">
+          <span>Wellness</span>
+          <strong>{linkedDevices.length ? `${linkedDevices.length} device${linkedDevices.length === 1 ? "" : "s"} linked` : "Not linked"}</strong>
+        </div>
+        <div className="context-item context-item--verified">
+          <ShieldCheck size={16} />
+          <span>
+            <strong>Identity verified</strong>
+            <small>Synthetic profile</small>
+          </span>
+        </div>
       </section>
 
       <section className="experience-shell">
+        <AvatarStage
+          profile={profile}
+          status={avatarStatus}
+          isListening={isListening}
+          voiceSupported={isSupported}
+          interimTranscript={interimTranscript}
+          onToggleListening={toggle}
+          onPromptReady={onLiveAvatarPromptReady}
+        />
+
         <section className="conversation-panel" aria-label="Conversation with Vera">
           <header className="conversation-header">
             <div>
-              <span className="conversation-header__icon"><Sparkles size={18} /></span>
-              <div><strong>Ask Vera</strong><small>Grounded in your benefits and preferences</small></div>
+              <span className="conversation-header__icon">
+                <Sparkles size={18} />
+              </span>
+              <div>
+                <strong>Ask Vera</strong>
+                <small>Grounded in your benefits and preferences</small>
+              </div>
             </div>
             <div className="conversation-header__actions">
-              <span className="secure-label"><ShieldCheck size={14} /> Private session</span>
+              <span className="secure-label">
+                <ShieldCheck size={14} /> Private session
+              </span>
               <button
                 className="icon-button"
                 type="button"
@@ -114,14 +172,23 @@ export function MemberExperience({
 
           <div className="conversation-feed" ref={feedRef} aria-live="polite">
             <div className="proactive-insight">
-              <span><Sparkles size={15} /></span>
-              <div><strong>5 opportunities found for you</strong><p>Vera connects benefit, care, hospital arrival, wellness, and preference signals—never an “average member.”</p></div>
+              <span>
+                <Sparkles size={15} />
+              </span>
+              <div>
+                <strong>5 opportunities found for you</strong>
+                <p>Vera connects benefit, care, hospital arrival, wellness, and preference signals—never an “average member.”</p>
+              </div>
               <span className="proactive-insight__new">New</span>
             </div>
 
             {messages.map((message) => (
               <div className={`message-row message-row--${message.role}`} key={message.id}>
-                {message.role === "assistant" && <span className="message-avatar"><Bot size={16} /></span>}
+                {message.role === "assistant" && (
+                  <span className="message-avatar">
+                    <Bot size={16} />
+                  </span>
+                )}
                 <div className="message-content">
                   <div className="message-bubble">
                     <p>{message.text}</p>
@@ -134,23 +201,11 @@ export function MemberExperience({
                   )}
                   {message.factCheck && <FactCheckCard result={message.factCheck} />}
                   {message.plan?.facilities ? (
-                    <HospitalPrepCard
-                      plan={message.plan}
-                      completed={completedActions.has(message.plan.id)}
-                      onComplete={onCompleteAction}
-                    />
+                    <HospitalPrepCard plan={message.plan} completed={completedActions.has(message.plan.id)} onComplete={onCompleteAction} />
                   ) : (
-                    message.plan && (
-                    <ActionCard
-                      plan={message.plan}
-                      completed={completedActions.has(message.plan.id)}
-                      onComplete={onCompleteAction}
-                    />
-                    )
+                    message.plan && <ActionCard plan={message.plan} completed={completedActions.has(message.plan.id)} onComplete={onCompleteAction} />
                   )}
-                  {message.plan?.id === "wellness-connect" && completedActions.has("wellness-connect") && (
-                    <WellnessPulse />
-                  )}
+                  {message.plan?.id === "wellness-connect" && completedActions.has("wellness-connect") && <WellnessPulse />}
                   <span className="message-time">
                     {message.role === "assistant" && <CheckCircle2 size={12} />} {message.timestamp}
                   </span>
@@ -160,10 +215,14 @@ export function MemberExperience({
 
             {isThinking && (
               <div className="message-row message-row--assistant">
-                <span className="message-avatar"><Bot size={16} /></span>
+                <span className="message-avatar">
+                  <Bot size={16} />
+                </span>
                 <div className="message-content">
                   <div className="message-bubble message-bubble--thinking">
-                    <span /><span /><span />
+                    <span />
+                    <span />
+                    <span />
                     <small>Reviewing the whole journey</small>
                   </div>
                 </div>
@@ -207,12 +266,18 @@ export function MemberExperience({
             </form>
 
             <div className="conversation-footnote">
-              <span><Info size={13} /> Demo uses synthetic data. Fact-checks cite CDC, NIH, and AHA library sources. Vera is not medical advice or an emergency service.</span>
+              <span>
+                <Info size={13} /> Demo uses synthetic data. Fact-checks cite CDC, NIH, and AHA library sources. Vera is not medical advice or an emergency service.
+              </span>
               <button type="button" onClick={() => onSend("Please connect me with a human care advocate.")}>
                 <Headphones size={13} /> Human help
               </button>
             </div>
-            {error && <p className="voice-error" role="alert">{error}</p>}
+            {error && (
+              <p className="voice-error" role="alert">
+                {error}
+              </p>
+            )}
           </div>
         </section>
       </section>

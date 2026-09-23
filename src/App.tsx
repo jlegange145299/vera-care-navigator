@@ -1,11 +1,10 @@
-import { BriefcaseBusiness, LockKeyhole, MessageCircle, Sparkles } from "lucide-react";
+import { BarChart3, LockKeyhole, Menu, MessageCircle, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrandMark } from "./components/BrandMark";
 import { DemoGuide } from "./components/DemoGuide";
 import { InsightsDashboard } from "./components/InsightsDashboard";
 import { MemberExperience } from "./components/MemberExperience";
 import { ProfileSwitcher } from "./components/ProfileSwitcher";
-import { AvatarStage } from "./components/AvatarStage";
 import { WellnessBreakdown } from "./components/WellnessBreakdown";
 import { demoScenarios, getActionConfirmation, getDemoReply } from "./data/demoData";
 import { createWelcomeMessage, defaultMemberProfile } from "./data/memberProfiles";
@@ -19,6 +18,7 @@ function createMessageId(prefix: string) {
 
 function App() {
   const [view, setView] = useState<ExperienceView>("member");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profile, setProfile] = useState(defaultMemberProfile);
   const [messages, setMessages] = useState<ChatMessage[]>([createWelcomeMessage(defaultMemberProfile)]);
   const [isThinking, setIsThinking] = useState(false);
@@ -27,9 +27,8 @@ function App() {
   const [linkedDevices, setLinkedDevices] = useState<WellnessDeviceId[]>([]);
   const [locationMethod, setLocationMethod] = useState<"ip" | "gps">("ip");
   const requestRef = useRef<AbortController | null>(null);
-  const appContentRef = useRef<HTMLDivElement>(null);
   const liveAvatarPromptRef = useRef<((text: string) => void) | null>(null);
-  const { speak, stop } = useSpeechOutput(speechEnabled, profile.genderLabel);
+  const { isSpeaking, speak, stop } = useSpeechOutput(speechEnabled, profile.genderLabel);
 
   const handleLiveAvatarPromptReady = useCallback((sendPrompt: ((text: string) => void) | null) => {
     liveAvatarPromptRef.current = sendPrompt;
@@ -44,7 +43,8 @@ function App() {
 
   const navigate = (nextView: ExperienceView) => {
     setView(nextView);
-    appContentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const selectProfile = (nextProfile: typeof profile) => {
@@ -153,74 +153,71 @@ function App() {
 
   return (
     <div className="app-shell">
-      <div className="vera-phone">
-        <header className="app-header">
-          <button className="header-brand-button" type="button" onClick={() => navigate("member")} aria-label="Go to Vera member experience">
-            <BrandMark />
+      <header className="app-header">
+        <button className="header-brand-button" type="button" onClick={() => navigate("member")} aria-label="Go to Vera member experience">
+          <BrandMark />
+        </button>
+        <nav className={`primary-nav ${mobileMenuOpen ? "primary-nav--open" : ""}`} aria-label="Primary navigation">
+          <button
+            className={view === "member" ? "primary-nav__item--active" : ""}
+            type="button"
+            onClick={() => navigate("member")}
+            aria-current={view === "member" ? "page" : undefined}
+          >
+            <MessageCircle size={17} /> Member experience
           </button>
-
-          <div className="header-actions">
-            <button
-                className={view === "insights" ? "business-insights-button business-insights-button--active" : "business-insights-button"}
-                type="button"
-                onClick={() => navigate("insights")}
-                aria-current={view === "insights" ? "page" : undefined}
-                aria-label="Open business-only Friction Intelligence"
-              >
-                <BriefcaseBusiness size={15} />
-                <span><strong>Business</strong><small>Friction Intelligence</small></span>
-            </button>
-            <span className="header-privacy"><LockKeyhole size={14} /> Protected</span>
-            <ProfileSwitcher profile={profile} onSelect={selectProfile} />
-          </div>
-          <AvatarStage
-            compact
-            profile={profile}
-            status="idle"
-            isListening={false}
-            voiceSupported={false}
-            interimTranscript=""
-            onToggleListening={() => undefined}
-            onPromptReady={handleLiveAvatarPromptReady}
-          />
-        </header>
-
-        <div className="app-content" ref={appContentRef}>
-          {view === "member" ? (
-            <MemberExperience
-              profile={profile}
-              messages={messages}
-              isThinking={isThinking}
-              speechEnabled={speechEnabled}
-              completedActions={completedActions}
-              linkedDevices={linkedDevices}
-              locationMethod={locationMethod}
-              onSend={handleSend}
-              onCompleteAction={handleCompleteAction}
-              onToggleSpeech={toggleSpeech}
-            />
-          ) : view === "wellness" ? (
-            <WellnessBreakdown profile={profile} />
-          ) : (
-            <InsightsDashboard />
-          )}
-        </div>
-
-        <nav className="bottom-nav" aria-label="Primary navigation">
-          <button className={view === "member" ? "nav-tab nav-tab--active" : "nav-tab"} type="button" onClick={() => navigate("member")} aria-current={view === "member" ? "page" : undefined}>
-            <MessageCircle size={17} />
-            <span>Home</span>
+          <button
+            className={view === "wellness" ? "primary-nav__item--active" : ""}
+            type="button"
+            onClick={() => navigate("wellness")}
+            aria-current={view === "wellness" ? "page" : undefined}
+          >
+            <Sparkles size={17} /> Wellness
           </button>
-          <button className={view === "wellness" ? "nav-tab nav-tab--active" : "nav-tab"} type="button" onClick={() => navigate("wellness")} aria-current={view === "wellness" ? "page" : undefined}>
-            <Sparkles size={17} />
-            <span>Wellness</span>
-          </button>
-          <button className={view === "insights" ? "nav-tab nav-tab--active" : "nav-tab"} type="button" onClick={() => navigate("insights")} aria-current={view === "insights" ? "page" : undefined}>
-            <BriefcaseBusiness size={17} />
-            <span>Business</span>
+          <button
+            className={view === "insights" ? "primary-nav__item--active" : ""}
+            type="button"
+            onClick={() => navigate("insights")}
+            aria-current={view === "insights" ? "page" : undefined}
+          >
+            <BarChart3 size={17} /> Friction intelligence
           </button>
         </nav>
-      </div>
+        <div className="header-actions">
+          <span className="header-privacy"><LockKeyhole size={14} /> Protected session</span>
+          <ProfileSwitcher profile={profile} onSelect={selectProfile} />
+          <button
+            className="mobile-menu-button"
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label="Toggle navigation"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
+          </button>
+        </div>
+      </header>
+
+      {view === "member" ? (
+        <MemberExperience
+          profile={profile}
+          messages={messages}
+          isThinking={isThinking}
+          isSpeaking={isSpeaking}
+          speechEnabled={speechEnabled}
+          completedActions={completedActions}
+          linkedDevices={linkedDevices}
+          locationMethod={locationMethod}
+          onSend={handleSend}
+          onCompleteAction={handleCompleteAction}
+          onToggleSpeech={toggleSpeech}
+          onLiveAvatarPromptReady={handleLiveAvatarPromptReady}
+        />
+      ) : view === "wellness" ? (
+        <WellnessBreakdown profile={profile} />
+      ) : (
+        <InsightsDashboard />
+      )}
 
       <DemoGuide onNavigate={navigate} />
     </div>
