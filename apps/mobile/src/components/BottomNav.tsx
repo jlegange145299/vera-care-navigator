@@ -1,15 +1,15 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { ExperienceView } from "@vera/core";
 import { colors, minTouch } from "../theme";
 
-const tabs: { id: ExperienceView; label: string }[] = [
+type MobileView = "member" | "wellness";
+
+const tabs: { id: MobileView; label: string }[] = [
   { id: "member", label: "Home" },
   { id: "wellness", label: "Wellness" },
-  { id: "insights", label: "Business" },
 ];
 
-export function BottomNav({ view, onNavigate }: { view: ExperienceView; onNavigate: (view: ExperienceView) => void }) {
+export function BottomNav({ view, onNavigate }: { view: MobileView; onNavigate: (view: MobileView) => void }) {
   const insets = useSafeAreaInsets();
 
   return (

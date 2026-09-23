@@ -125,6 +125,12 @@ export function MemberScreen({
   onCompleteAction,
 }: MemberScreenProps) {
   const [draft, setDraft] = useState("");
+  const profileIndex = Math.max(0, memberProfiles.findIndex((item) => item.id === profile.id));
+
+  const cycleProfile = (delta: number) => {
+    const next = memberProfiles[(profileIndex + delta + memberProfiles.length) % memberProfiles.length];
+    onSelectProfile(next);
+  };
 
   const submit = () => {
     const text = draft.trim();
@@ -135,32 +141,44 @@ export function MemberScreen({
 
   return (
     <View style={styles.flex}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.profileRow}>
-        {memberProfiles.map((item) => {
-          const active = item.id === profile.id;
-          return (
-            <Pressable key={item.id} style={[styles.profileChip, active && styles.profileChipActive]} onPress={() => onSelectProfile(item)}>
-              <Image source={profilePortrait(item.id)} style={styles.profileAvatar} />
-              <Text style={styles.profileName}>{item.firstName}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.profileCard}>
+        <Pressable
+          style={styles.profileNav}
+          onPress={() => cycleProfile(-1)}
+          accessibilityLabel="Previous member profile"
+          hitSlop={8}
+        >
+          <Text style={styles.profileNavText}>‹</Text>
+        </Pressable>
 
-      <View style={styles.contextPanel}>
-        <Text style={styles.contextTitle}>
-          {profile.greeting}, {profile.fullName}
-        </Text>
-        <Text style={styles.contextLine}>
-          {profile.age} · {profile.genderLabel} · {profile.plan}
-        </Text>
-        <Text style={styles.contextLine}>
-          {profile.city}, {profile.region} · Location {locationMethod.toUpperCase()}
-        </Text>
-        <Text style={styles.contextLine}>
-          Wellness · {linkedDevices.length ? `${linkedDevices.length} device(s) linked` : "Not linked"}
-        </Text>
+        <View style={styles.profileMain}>
+          <Image source={profilePortrait(profile.id)} style={styles.profilePortrait} accessibilityLabel={profile.avatarLabel} />
+          <View style={styles.profileCopy}>
+            <Text style={styles.profileGreeting}>{profile.greeting}</Text>
+            <Text style={styles.profileName}>{profile.fullName}</Text>
+            <Text style={styles.profileMeta} numberOfLines={2}>
+              {profile.age} · {profile.genderLabel} · {profile.plan}
+            </Text>
+            <Text style={styles.profileMeta} numberOfLines={1}>
+              {profile.city}, {profile.region} · {locationMethod.toUpperCase()} ·{" "}
+              {linkedDevices.length ? `${linkedDevices.length} device linked` : "Wellness not linked"}
+            </Text>
+          </View>
+        </View>
+
+        <Pressable
+          style={styles.profileNav}
+          onPress={() => cycleProfile(1)}
+          accessibilityLabel="Next member profile"
+          hitSlop={8}
+        >
+          <Text style={styles.profileNavText}>›</Text>
+        </Pressable>
       </View>
+
+      <Text style={styles.profilePager}>
+        Profile {profileIndex + 1} of {memberProfiles.length} · {profile.avatarLabel}
+      </Text>
 
       <ScrollView style={[styles.feed, safariWeb]} contentContainerStyle={styles.feedContent} keyboardShouldPersistTaps="handled">
         <View style={styles.proactive}>
@@ -169,9 +187,18 @@ export function MemberScreen({
         </View>
         {messages.map((message) => (
           <View key={message.id} style={message.role === "user" ? styles.userBubbleWrap : styles.assistantBubbleWrap}>
-            <View style={message.role === "user" ? styles.userBubble : styles.assistantBubble}>
-              <Text style={message.role === "user" ? styles.userText : styles.assistantText}>{message.text}</Text>
-            </View>
+            {message.role === "assistant" ? (
+              <View style={styles.assistantRow}>
+                <Image source={profilePortrait(profile.id)} style={styles.bubbleAvatar} accessibilityLabel="Vera guide" />
+                <View style={styles.assistantBubble}>
+                  <Text style={styles.assistantText}>{message.text}</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.userBubble}>
+                <Text style={styles.userText}>{message.text}</Text>
+              </View>
+            )}
             {message.factCheck ? (
               <View style={styles.factCard}>
                 <Text style={styles.factVerdict}>{verdictLabel(message.factCheck.verdict)}</Text>
@@ -195,6 +222,7 @@ export function MemberScreen({
         ))}
         {isThinking ? (
           <View style={styles.thinkingRow}>
+            <Image source={profilePortrait(profile.id)} style={styles.bubbleAvatar} accessibilityLabel="Vera guide" />
             <ActivityIndicator color={colors.blue600} />
             <Text style={styles.thinkingText}>Reviewing the whole journey…</Text>
           </View>
@@ -237,135 +265,154 @@ export function MemberScreen({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  profileRow: { paddingHorizontal: 12, gap: 8, paddingBottom: 8 },
-  profileChip: {
+  profileCard: {
+    flexDirection: "row",
     alignItems: "center",
-    padding: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.line,
-    minWidth: 72,
-    backgroundColor: colors.surface,
-  },
-  profileChipActive: { borderColor: colors.blue600, backgroundColor: "#eef1ff" },
-  profileAvatar: { width: 44, height: 44, borderRadius: 22 },
-  profileName: { color: colors.ink900, fontSize: 12, marginTop: 4, fontWeight: "600" },
-  contextPanel: {
     marginHorizontal: 12,
-    marginBottom: 8,
-    padding: 12,
+    marginTop: 8,
+    marginBottom: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     borderRadius: 14,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
-    gap: 4,
   },
-  contextTitle: { color: colors.ink900, fontWeight: "700", fontSize: 14 },
-  contextLine: { color: colors.ink700, fontSize: 12 },
+  profileNav: {
+    width: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    ...minTouch,
+  },
+  profileNavText: { color: colors.blue600, fontSize: 28, fontWeight: "300", lineHeight: 30 },
+  profileMain: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, minWidth: 0 },
+  profilePortrait: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: "#dce5ff" },
+  profileCopy: { flex: 1, minWidth: 0 },
+  profileGreeting: { color: colors.ink500, fontSize: 11 },
+  profileName: { color: colors.ink900, fontWeight: "700", fontSize: 15, lineHeight: 18 },
+  profileMeta: { color: colors.ink700, fontSize: 11, lineHeight: 15, marginTop: 2 },
+  profilePager: {
+    textAlign: "center",
+    color: colors.ink500,
+    fontSize: 10,
+    fontWeight: "600",
+    marginBottom: 6,
+    paddingHorizontal: 12,
+  },
   feed: { flex: 1 },
-  feedContent: { padding: 12, gap: 12, paddingBottom: 16 },
+  feedContent: { paddingHorizontal: 12, paddingBottom: 8, gap: 10 },
   proactive: {
     backgroundColor: "#eef1ff",
-    borderRadius: 14,
-    padding: 12,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: colors.line,
   },
-  proactiveTitle: { color: colors.ink900, fontWeight: "700" },
-  proactiveText: { color: colors.ink700, fontSize: 12, marginTop: 4, lineHeight: 17 },
+  proactiveTitle: { color: colors.ink900, fontWeight: "700", fontSize: 13, lineHeight: 17 },
+  proactiveText: { color: colors.ink700, fontSize: 11, marginTop: 2, lineHeight: 15 },
   userBubbleWrap: { alignItems: "flex-end" },
-  assistantBubbleWrap: { alignItems: "flex-start" },
+  assistantBubbleWrap: { alignItems: "flex-start", maxWidth: "100%" },
+  assistantRow: { flexDirection: "row", alignItems: "flex-end", gap: 8, maxWidth: "100%" },
+  bubbleAvatar: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: "#dce5ff" },
   userBubble: {
     backgroundColor: colors.blue600,
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     maxWidth: "90%",
   },
   assistantBubble: {
+    flexShrink: 1,
     backgroundColor: colors.surface,
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    maxWidth: "95%",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    maxWidth: "82%",
     borderWidth: 1,
     borderColor: colors.line,
   },
-  userText: { color: "#fff", fontSize: 15, lineHeight: 21 },
-  assistantText: { color: colors.ink900, fontSize: 15, lineHeight: 21 },
+  userText: { color: "#fff", fontSize: 15, lineHeight: 20 },
+  assistantText: { color: colors.ink900, fontSize: 15, lineHeight: 20 },
   factCard: {
-    marginTop: 8,
+    marginTop: 6,
+    marginLeft: 36,
     backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 12,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: colors.line,
-    maxWidth: "95%",
+    maxWidth: "92%",
   },
-  factVerdict: { color: colors.blue600, fontWeight: "700", marginBottom: 4 },
-  factClaim: { color: colors.ink900, fontWeight: "600", marginBottom: 6 },
-  factFinding: { color: colors.ink700, fontSize: 13, lineHeight: 18 },
-  factSource: { color: colors.ink500, fontSize: 11, marginTop: 4 },
+  factVerdict: { color: colors.blue600, fontWeight: "700", fontSize: 12, marginBottom: 2 },
+  factClaim: { color: colors.ink900, fontWeight: "600", fontSize: 13, lineHeight: 17 },
+  factFinding: { color: colors.ink700, fontSize: 12, lineHeight: 16, marginTop: 4 },
+  factSource: { color: colors.ink500, fontSize: 10, marginTop: 3, lineHeight: 13 },
   planCard: {
-    marginTop: 8,
+    marginTop: 6,
+    marginLeft: 36,
     backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 12,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: colors.mint500,
-    maxWidth: "95%",
+    maxWidth: "92%",
   },
-  planEyebrow: { color: colors.blue600, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6 },
-  planTitle: { color: colors.ink900, fontSize: 16, fontWeight: "700", marginTop: 4 },
-  planSummary: { color: colors.ink700, fontSize: 13, marginTop: 6, lineHeight: 18 },
-  planFact: { color: colors.ink700, fontSize: 12, marginTop: 4 },
-  deviceRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
+  planEyebrow: { color: colors.blue600, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 },
+  planTitle: { color: colors.ink900, fontSize: 15, fontWeight: "700", marginTop: 2, lineHeight: 19 },
+  planSummary: { color: colors.ink700, fontSize: 12, marginTop: 4, lineHeight: 16 },
+  planFact: { color: colors.ink700, fontSize: 11, marginTop: 2, lineHeight: 14 },
+  deviceRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
   deviceChip: {
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.line,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     backgroundColor: colors.surfaceSoft,
   },
   deviceChipSelected: { borderColor: colors.blue600, backgroundColor: "#eef1ff" },
-  deviceChipText: { color: colors.ink900, fontSize: 12 },
+  deviceChipText: { color: colors.ink900, fontSize: 11 },
   primaryButton: {
-    marginTop: 12,
+    marginTop: 8,
     backgroundColor: colors.blue600,
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderRadius: 10,
+    paddingVertical: 10,
     alignItems: "center",
-    ...minTouch,
+    minHeight: 44,
+    justifyContent: "center",
   },
-  primaryButtonText: { color: "#fff", fontWeight: "700" },
-  completedLabel: { marginTop: 10, color: colors.ink500, fontSize: 12 },
+  primaryButtonText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  completedLabel: { marginTop: 6, color: colors.ink500, fontSize: 11 },
   thinkingRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  thinkingText: { color: colors.ink500 },
-  promptRow: { paddingHorizontal: 12, gap: 8, paddingBottom: 8 },
+  thinkingText: { color: colors.ink500, fontSize: 12 },
+  promptRow: { paddingHorizontal: 12, gap: 6, paddingBottom: 6 },
   promptChip: {
     backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: colors.line,
-    ...minTouch,
+    minHeight: 40,
+    justifyContent: "center",
   },
-  promptChipText: { color: colors.ink900, fontSize: 12, fontWeight: "600" },
+  promptChipText: { color: colors.ink900, fontSize: 11, fontWeight: "600" },
   composer: {
     flexDirection: "row",
     gap: 8,
     paddingHorizontal: 12,
-    paddingTop: 8,
+    paddingTop: 6,
     backgroundColor: colors.page,
   },
   input: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: Platform.OS === "web" ? 14 : 12,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === "web" ? 12 : 10,
     color: colors.ink900,
     borderWidth: 1,
     borderColor: colors.line,
@@ -373,12 +420,12 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     backgroundColor: colors.mint500,
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    borderRadius: 12,
+    paddingHorizontal: 14,
     justifyContent: "center",
-    ...minTouch,
+    minHeight: 44,
   },
   sendButtonText: { color: colors.navy950, fontWeight: "700" },
-  humanHelp: { alignItems: "center", paddingBottom: 8, ...minTouch },
-  humanHelpText: { color: colors.blue600, fontSize: 12, fontWeight: "600" },
+  humanHelp: { alignItems: "center", paddingVertical: 6, minHeight: 40, justifyContent: "center" },
+  humanHelpText: { color: colors.blue600, fontSize: 11, fontWeight: "600" },
 });

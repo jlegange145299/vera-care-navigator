@@ -2,21 +2,21 @@ import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import type { ExperienceView } from "@vera/core";
 import { AppHeader } from "./src/components/AppHeader";
 import { BottomNav } from "./src/components/BottomNav";
 import { useVeraChat } from "./src/hooks/useVeraChat";
 import { defaultMobileProfile } from "./src/memberProfiles";
-import { InsightsScreen } from "./src/screens/InsightsScreen";
 import { MemberScreen } from "./src/screens/MemberScreen";
 import { WellnessScreen } from "./src/screens/WellnessScreen";
 import { colors } from "./src/theme";
 
+type MobileView = "member" | "wellness";
+
 export default function App() {
-  const [view, setView] = useState<ExperienceView>("member");
+  const [view, setView] = useState<MobileView>("member");
   const chat = useVeraChat(defaultMobileProfile);
 
-  const navigate = (next: ExperienceView) => setView(next);
+  const navigate = (next: MobileView) => setView(next);
 
   return (
     <SafeAreaProvider>
@@ -27,7 +27,7 @@ export default function App() {
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           keyboardVerticalOffset={Platform.OS === "ios" ? 4 : 0}
         >
-          <AppHeader view={view} onNavigateHome={() => navigate("member")} />
+          <AppHeader profile={chat.profile} onNavigateHome={() => navigate("member")} />
           <View style={styles.body}>
             {view === "member" ? (
               <MemberScreen
@@ -41,10 +41,8 @@ export default function App() {
                 onSend={chat.handleSend}
                 onCompleteAction={chat.handleCompleteAction}
               />
-            ) : view === "wellness" ? (
-              <WellnessScreen profile={chat.profile} />
             ) : (
-              <InsightsScreen />
+              <WellnessScreen profile={chat.profile} />
             )}
           </View>
           <BottomNav view={view} onNavigate={navigate} />
