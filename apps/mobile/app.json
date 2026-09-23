@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Vera Care Mobile",
+    "slug": "vera-care-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "vera-care",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/vera-portrait.jpg",
+    "splash": {
+      "image": "./assets/vera-portrait.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vera.carenavigator"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/vera-portrait.jpg",
+        "backgroundColor": "#0f172a"
+      },
+      "package": "com.vera.carenavigator"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    }
+  }
+}

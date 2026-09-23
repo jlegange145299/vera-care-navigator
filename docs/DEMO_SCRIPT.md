@@ -105,6 +105,23 @@ Member OAuth/OIDC belongs at the application boundary through the approved enter
 
 Pilot against baseline: opportunity acceptance, time to care, repeat contacts, transfer count, time to clarity, teach-back confidence, handoff completeness, and source-specific financial opportunity. Keep member, plan/client, operational, and quality value separate.
 
+## Mobile judge surfaces
+
+Use **two URLs** after Render deploy:
+
+| Surface | URL | What to show |
+|---------|-----|--------------|
+| Desktop | `vera-care-navigator` service | Full experience + Friction Intelligence tab |
+| Mobile web | `vera-mobile-web` static service | React Native member chat (Expo web export) |
+| Expo Go | `npm run dev:mobile` + QR | Same RN app on a physical phone |
+
+On mobile, walk through profile switch → fact-check prompt → one journey action card. Mention that copy and routing come from the same `@vera/core` package as desktop.
+
+Render env (once per environment):
+
+- Desktop **`CORS_ORIGINS`**: mobile web origin (example `https://vera-mobile-web.onrender.com`)
+- Mobile **`EXPO_PUBLIC_VERA_API_URL`**: desktop origin (example `https://vera-care-navigator.onrender.com`)
+
 ## Demo recovery
 
 - **Microphone blocked:** select a suggested prompt; all journeys remain available.

@@ -5,13 +5,20 @@
 1. Produce a persuasive, reliable judging experience without credentials.
 2. Keep OpenAI and LiveAvatar credentials outside the browser.
 3. Separate model language generation from deterministic healthcare journey facts and actions.
-4. Deploy as one Render web service with same-origin APIs.
+4. Deploy desktop as one Render Node service; deploy mobile as a static Expo web export that calls the desktop API with CORS.
 5. Provide a clear path to enterprise identity, consent, data authorization, and governance.
+
+## Shared content (`@vera/core`)
+
+Journey copy, fact-check library, member profile records, demo scenarios, and deterministic routing live in `packages/core`. The Vite app, Expo app, and Express demo engine import this package so a single edit updates browser, mobile web, Expo Go, and server behavior.
 
 ## Runtime map
 
 ```text
-Browser (React)
+packages/core ──> Vite web app (src/)     ── same-origin ──> Express /api/*
+              └──> Expo mobile (apps/mobile) ── CORS ───────> Express /api/*
+
+Desktop browser (React)
 ├─ Member workspace
 │  ├─ Web SpeechRecognition ───────────────┐
 │  ├─ Conversation + action cards         │
@@ -21,9 +28,9 @@ Browser (React)
 └─ Same-origin API client                  │
    ├─ POST /api/chat ──────────────────────┼─> Express validation/rate limits
    │                                       │   ├─ deterministic safety route
-   │                                       │   ├─ deterministic demo engine
+   │                                       │   ├─ deterministic demo engine (@vera/core)
    │                                       │   └─ optional OpenAI Responses API
-   └─ POST /api/avatar/embed ──────────────┴─> LiveAvatar v2 embed proxy
+   └─ POST /api/avatar/session ────────────┴─> LiveAvatar v2 embed proxy
                                                    (explicit click only)
 ```
 

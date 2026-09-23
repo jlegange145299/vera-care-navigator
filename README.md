@@ -27,13 +27,46 @@ All identities, benefits, claims, provider availability, status events, costs, a
 
 ## Stack
 
-- React 19 + TypeScript + Vite
+- React 19 + TypeScript + Vite (browser / desktop judges)
+- Expo + React Native (`apps/mobile`) for Expo Go and Expo web on Render
+- Shared demo content in `@vera/core` (`packages/core`) — journeys, fact-check, profiles, copy
 - Node.js + Express
 - OpenAI Responses API (optional, server-side)
 - LiveAvatar short-lived embed (optional, server-side)
 - Browser Web Speech APIs for credential-free speech-to-text and text-to-speech
 - Vitest, Testing Library, and Supertest
-- Render Blueprint for one-service deployment
+- Render Blueprint for **two** judge surfaces: desktop web + mobile web (static Expo export)
+
+## Mobile (Expo Go + Expo web)
+
+Shared journeys and copy live in `packages/core` and are imported by both the Vite app and `apps/mobile`.
+
+| Surface | Command | Judge use |
+|--------|---------|-----------|
+| **Desktop browser** | `npm run dev` → `http://localhost:5173` | Full member + Friction Intelligence dashboard |
+| **Expo Go (phone)** | `npm run dev:mobile` → scan QR in Expo Go | Native member experience |
+| **Expo web (local)** | `npm run web -w vera-mobile` | Same RN UI in a mobile browser |
+| **Render** | Blueprint services `vera-care-navigator` + `vera-mobile-web` | Two public URLs |
+
+After deploy, set **`CORS_ORIGINS`** on the desktop service to your mobile web URL (for example `https://vera-mobile-web.onrender.com`) and set **`EXPO_PUBLIC_VERA_API_URL`** on the mobile static service to the desktop URL (for example `https://vera-care-navigator.onrender.com`). The mobile app calls that API for chat; if the network fails, it falls back to the same deterministic logic from `@vera/core` as the browser app.
+
+Expo Go (local):
+
+```cmd
+npm install
+npm run dev:mobile
+```
+
+Install [Expo Go](https://expo.dev/go) on your phone, ensure the phone can reach your machine (same Wi‑Fi or use Expo’s tunnel option in the CLI), and scan the QR code.
+
+Expo web export (matches Render mobile build):
+
+```cmd
+set EXPO_PUBLIC_VERA_API_URL=https://your-desktop-service.onrender.com
+npm run build:mobile
+```
+
+Static files are written to `apps/mobile/dist`.
 
 ## Run locally
 
@@ -107,11 +140,15 @@ The suite covers deterministic intent/safety behavior, API validation and header
 ## Deploy to Render
 
 1. Create a **private** GitHub repository and push this project after internal approval.
-2. In Render, create a Blueprint from the repository; `render.yaml` defines the Node web service, health check, build, and start commands.
-3. Add `OPENAI_API_KEY` and/or `LIVEAVATAR_API_KEY` as secret environment variables only if connected mode is required.
-4. Deploy and verify `/api/health`, the three member journeys, voice permissions, the insights dashboard, and the judge walkthrough.
+2. In Render, create a Blueprint from the repository. `render.yaml` defines:
+   - **`vera-care-navigator`** — Node web service (Vite build + Express API + health check)
+   - **`vera-mobile-web`** — static Expo web export for judges who want a mobile URL in the browser
+3. Set **`EXPO_PUBLIC_VERA_API_URL`** on the mobile service to the desktop service URL.
+4. Set **`CORS_ORIGINS`** on the desktop service to the mobile web origin (comma-separated if needed).
+5. Add `OPENAI_API_KEY` and/or `LIVEAVATAR_API_KEY` on the desktop service only if connected mode is required.
+6. Deploy and verify `/api/health`, member journeys on desktop, the same journeys on mobile web / Expo Go, and the judge walkthrough on desktop.
 
-The same Express process serves the compiled React app and `/api/*`, eliminating CORS and multi-service setup for judges.
+The desktop Express process serves the compiled React app and `/api/*`. The mobile static site is a separate URL; it calls the desktop API cross-origin with CORS enabled.
 
 ## 90-second evaluation route
 

@@ -16,3 +16,17 @@ services:
         value: "true"
       - key: OPENAI_MODEL
         value: gpt-5-mini
+      - key: CORS_ORIGINS
+        sync: false
+
+  - type: web
+    name: vera-mobile-web
+    runtime: static
+    buildCommand: npm ci --include=dev && npm run build:mobile
+    staticPublishPath: apps/mobile/dist
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: NODE_VERSION
+        value: 24.14.0
+      - key: EXPO_PUBLIC_VERA_API_URL
+        sync: false

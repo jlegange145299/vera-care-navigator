@@ -1,3 +1,4 @@
+import cors from "cors";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -63,6 +64,18 @@ export function createApp() {
     }),
   );
   app.use(express.json({ limit: "32kb", strict: true }));
+
+  const allowedOrigins = process.env.CORS_ORIGINS?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  app.use(
+    "/api",
+    cors({
+      origin: allowedOrigins?.length ? allowedOrigins : true,
+      methods: ["GET", "POST", "OPTIONS"],
+    }),
+  );
+
   app.use((request, response, next) => {
     const requestId = request.header("x-request-id")?.slice(0, 80) || randomUUID();
     response.setHeader("x-request-id", requestId);
