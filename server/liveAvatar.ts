@@ -8,9 +8,18 @@ function extractString(source: unknown, keys: string[]): string | undefined {
   if (!source || typeof source !== "object") return undefined;
   const record = source as Record<string, unknown>;
   for (const key of keys) {
-    if (typeof record[key] === "string") return record[key];
+    if (typeof record[key] === "string" && record[key].length > 0) return record[key];
   }
   return undefined;
+}
+
+/** LiveAvatar wraps tokens in `{ data: { session_token } }` (see SDKSessionTokenSchema). */
+export function parseSessionTokenFromResponse(data: unknown): string | undefined {
+  const direct = extractString(data, ["session_token", "sessionToken"]);
+  if (direct) return direct;
+  if (!data || typeof data !== "object") return undefined;
+  const nested = (data as Record<string, unknown>).data;
+  return extractString(nested, ["session_token", "sessionToken"]);
 }
 
 export async function createLiveAvatarSession(): Promise<LiveAvatarSessionResult> {
@@ -21,15 +30,20 @@ export async function createLiveAvatarSession(): Promise<LiveAvatarSessionResult
 
   const baseUrl = (process.env.LIVEAVATAR_BASE_URL ?? "https://api.liveavatar.com").replace(/\/$/, "");
   const endpoint = process.env.LIVEAVATAR_SESSION_TOKEN_ENDPOINT ?? `${baseUrl}/v1/sessions/token`;
-  const payload = {
+
+  const avatarId = process.env.LIVEAVATAR_AVATAR_ID?.trim();
+  const voiceId = process.env.LIVEAVATAR_VOICE_ID?.trim();
+  const contextId = process.env.LIVEAVATAR_CONTEXT_ID?.trim();
+  const payload: Record<string, unknown> = {
     mode: "FULL",
-    avatar_id: process.env.LIVEAVATAR_AVATAR_ID,
-    avatar_persona: {
-      voice_id: process.env.LIVEAVATAR_VOICE_ID,
-      context_id: process.env.LIVEAVATAR_CONTEXT_ID,
-      language: process.env.LIVEAVATAR_LANGUAGE ?? "en",
-    },
+    is_sandbox: process.env.LIVEAVATAR_SANDBOX?.toLowerCase() === "true",
   };
+  if (avatarId) payload.avatar_id = avatarId;
+
+  const persona: Record<string, unknown> = { language: process.env.LIVEAVATAR_LANGUAGE ?? "en" };
+  if (voiceId) persona.voice_id = voiceId;
+  if (contextId) persona.context_id = contextId;
+  if (voiceId || contextId) payload.avatar_persona = persona;
 
   try {
     const upstreamResponse = await fetch(endpoint, {
@@ -48,9 +62,10 @@ export async function createLiveAvatarSession(): Promise<LiveAvatarSessionResult
     }
 
     const data = (await upstreamResponse.json()) as Record<string, unknown>;
-    const sessionToken = extractString(data, ["session_token", "sessionToken"]);
+    const sessionToken = parseSessionTokenFromResponse(data);
     if (!sessionToken) {
-      console.warn("LiveAvatar returned no session token.");
+      const message = extractString(data, ["message"]);
+      console.warn("LiveAvatar returned no session token.", message ? { message } : undefined);
       return { available: false, reason: "invalid_provider_response" };
     }
 
