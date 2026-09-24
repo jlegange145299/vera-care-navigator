@@ -82,8 +82,11 @@ export function AvatarStage({
       } else {
         setAvatarNotice(avatarErrorCopy[liveAvatar.reason ?? "provider_unavailable"]);
       }
-    } catch {
-      if (!controller.signal.aborted) setAvatarNotice(avatarErrorCopy.provider_unavailable);
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        console.warn("LiveAvatar session failed to start.", error);
+        setAvatarNotice(avatarErrorCopy.provider_unavailable);
+      }
     } finally {
       if (requestRef.current === controller) {
         requestRef.current = null;

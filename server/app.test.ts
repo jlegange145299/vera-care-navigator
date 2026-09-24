@@ -40,6 +40,7 @@ describe("Vera API", () => {
     expect(response.headers["x-request-id"]).toBeTruthy();
     expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.headers["content-security-policy"]).toContain("default-src 'self'");
+    expect(response.headers["content-security-policy"]).toContain("livekit.cloud");
   });
 
   it("returns a stable action contract in credential-free mode", async () => {

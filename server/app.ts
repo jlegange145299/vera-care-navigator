@@ -34,6 +34,20 @@ function createRateLimiter(limit: number) {
   });
 }
 
+/** Browser must reach LiveAvatar API plus LiveKit signaling (FULL mode WebRTC). */
+const liveAvatarConnectSrc = [
+  "'self'",
+  "https://*.liveavatar.com",
+  "wss://*.liveavatar.com",
+  "https://api.liveavatar.com",
+  "https://*.heygen.com",
+  "wss://*.heygen.com",
+  "https://*.livekit.cloud",
+  "wss://*.livekit.cloud",
+  "https://*.turn.livekit.cloud",
+  "wss://*.turn.livekit.cloud",
+] as const;
+
 export function createApp() {
   const app = express();
   const isProduction = process.env.NODE_ENV === "production";
@@ -49,7 +63,7 @@ export function createApp() {
           styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
           fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
           imgSrc: ["'self'", "data:", "blob:"],
-          connectSrc: ["'self'", "https://*.liveavatar.com", "wss://*.liveavatar.com", "https://*.heygen.com", "wss://*.heygen.com"],
+          connectSrc: [...liveAvatarConnectSrc],
           frameSrc: ["'self'", "https://*.liveavatar.com", "https://*.heygen.com"],
           mediaSrc: ["'self'", "blob:"],
           objectSrc: ["'none'"],
