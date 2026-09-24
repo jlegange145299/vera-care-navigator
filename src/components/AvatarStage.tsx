@@ -1,4 +1,4 @@
-import { LoaderCircle, Mic, MicOff, Radio, Sparkles, Video, X } from "lucide-react";
+import { LoaderCircle, Radio, Video, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { LiveAvatarSession, SessionEvent } from "@heygen/liveavatar-web-sdk";
 import { requestLiveAvatarSession } from "../lib/api";
@@ -33,10 +33,10 @@ const avatarErrorCopy = {
 export function AvatarStage({
   status,
   profile,
-  isListening,
-  voiceSupported,
+  isListening: _isListening,
+  voiceSupported: _voiceSupported,
   interimTranscript,
-  onToggleListening,
+  onToggleListening: _onToggleListening,
   compact = false,
   featured = false,
   onPromptReady,
@@ -140,13 +140,9 @@ export function AvatarStage({
       ) : (
         <>
           <div className="avatar-visual" aria-hidden="true">
-            <div className="avatar-orbit avatar-orbit--one" />
-            <div className="avatar-orbit avatar-orbit--two" />
             <div className="avatar-portrait">
               <VeraPortrait status={status} profile={profile} />
             </div>
-            <div className="avatar-spark avatar-spark--one"><Sparkles size={16} /></div>
-            <div className="avatar-spark avatar-spark--two"><Sparkles size={12} /></div>
           </div>
 
           <div className="avatar-caption" aria-live="polite">
@@ -155,12 +151,6 @@ export function AvatarStage({
           </div>
 
           {avatarNotice && <div className="avatar-notice" role="status">{avatarNotice}</div>}
-          {!featured && (
-            <>
-              <button className={`voice-orb ${isListening ? "voice-orb--active" : ""}`} type="button" onClick={onToggleListening} disabled={!voiceSupported} aria-pressed={isListening} aria-label={isListening ? "Stop listening" : "Talk to Vera"}>{isListening ? <MicOff size={24} /> : <Mic size={24} />}</button>
-              <span className="voice-orb__label">{voiceSupported ? (isListening ? "Tap to stop" : "Tap to talk") : "Voice needs Chrome or Edge"}</span>
-            </>
-          )}
         </>
       )}
     </section>

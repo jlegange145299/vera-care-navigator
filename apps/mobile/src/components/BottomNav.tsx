@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     ...minTouch,
   },
-  tabActive: { borderTopWidth: 2, borderTopColor: colors.blue600 },
+  tabActive: { borderTopWidth: 2, borderTopColor: colors.brandBlue },
   tabText: { color: colors.ink500, fontSize: 12, fontWeight: "600" },
-  tabTextActive: { color: colors.blue600 },
+  tabTextActive: { color: colors.brandBlue },
 });

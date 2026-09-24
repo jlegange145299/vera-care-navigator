@@ -15,11 +15,18 @@ export interface VeraApiReply {
   factCheck?: FactCheckResult;
 }
 
-function apiBaseUrl() {
-  const configured = process.env.EXPO_PUBLIC_VERA_API_URL?.replace(/\/$/, "");
+const DEV_API = "http://localhost:8787";
+const REQUEST_TIMEOUT_MS = 8000;
+
+function apiBaseUrl(): string | null {
+  const configured = process.env.EXPO_PUBLIC_VERA_API_URL?.trim().replace(/\/$/, "");
   if (configured) return configured;
-  if (typeof window !== "undefined" && window.location?.origin) return window.location.origin;
-  return "http://localhost:8787";
+  if (typeof __DEV__ !== "undefined" && __DEV__) return DEV_API;
+  return null;
+}
+
+export function isRemoteVeraApiConfigured() {
+  return Boolean(process.env.EXPO_PUBLIC_VERA_API_URL?.trim());
 }
 
 function isVeraApiReply(value: unknown): value is VeraApiReply {
@@ -33,15 +40,29 @@ export async function requestVeraReply(
   history: ConversationHistoryItem[],
   signal?: AbortSignal,
 ): Promise<VeraApiReply> {
-  const response = await fetch(`${apiBaseUrl()}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, history }),
-    signal,
-  });
+  const base = apiBaseUrl();
+  if (!base) throw new Error("Vera API URL is not configured for this build");
 
-  if (!response.ok) throw new Error(`Vera API returned ${response.status}`);
-  const data = (await response.json()) as unknown;
-  if (!isVeraApiReply(data)) throw new Error("Vera API returned an invalid response");
-  return data;
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => timeoutController.abort(), REQUEST_TIMEOUT_MS);
+
+  const onExternalAbort = () => timeoutController.abort();
+  signal?.addEventListener("abort", onExternalAbort);
+
+  try {
+    const response = await fetch(`${base}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, history }),
+      signal: timeoutController.signal,
+    });
+
+    if (!response.ok) throw new Error(`Vera API returned ${response.status}`);
+    const data = (await response.json()) as unknown;
+    if (!isVeraApiReply(data)) throw new Error("Vera API returned an invalid response");
+    return data;
+  } finally {
+    clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", onExternalAbort);
+  }
 }

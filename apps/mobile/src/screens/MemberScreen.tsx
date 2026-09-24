@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { demoScenarios, factCheckPrompt, type ActionCompletion, type ActionPlan, type ChatMessage, type MemberProfile, type WellnessDeviceId } from "@vera/core";
 import { memberProfiles, profilePortrait } from "../memberProfiles";
-import { colors, minTouch, safariWeb } from "../theme";
+import { colors, safariWeb } from "../theme";
 
 function verdictLabel(verdict: string) {
   if (verdict === "true") return "True";
@@ -223,22 +223,33 @@ export function MemberScreen({
         {isThinking ? (
           <View style={styles.thinkingRow}>
             <Image source={profilePortrait(profile.id)} style={styles.bubbleAvatar} accessibilityLabel="Vera guide" />
-            <ActivityIndicator color={colors.blue600} />
+            <ActivityIndicator color={colors.brandBlue} />
             <Text style={styles.thinkingText}>Reviewing the whole journey…</Text>
           </View>
         ) : null}
       </ScrollView>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.promptRow}>
+      <View style={styles.promptWrap}>
         {demoScenarios.map((scenario) => (
-          <Pressable key={scenario.id} style={styles.promptChip} onPress={() => onSend(scenario.prompt)} disabled={isThinking}>
+          <Pressable
+            key={scenario.id}
+            style={({ pressed }) => [styles.promptChip, pressed && styles.promptChipPressed]}
+            onPress={() => onSend(scenario.prompt)}
+            disabled={isThinking}
+            accessibilityRole="button"
+          >
             <Text style={styles.promptChipText}>{scenario.shortLabel}</Text>
           </Pressable>
         ))}
-        <Pressable style={styles.promptChip} onPress={() => onSend(factCheckPrompt.prompt)} disabled={isThinking}>
+        <Pressable
+          style={({ pressed }) => [styles.promptChip, pressed && styles.promptChipPressed]}
+          onPress={() => onSend(factCheckPrompt.prompt)}
+          disabled={isThinking}
+          accessibilityRole="button"
+        >
           <Text style={styles.promptChipText}>{factCheckPrompt.shortLabel}</Text>
         </Pressable>
-      </ScrollView>
+      </View>
 
       <View style={styles.composer}>
         <TextInput
@@ -269,54 +280,58 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginHorizontal: 12,
-    marginTop: 8,
-    marginBottom: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRadius: 14,
+    marginTop: 6,
+    marginBottom: 2,
+    paddingVertical: 6,
+    paddingHorizontal: 2,
+    borderRadius: 12,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
   },
   profileNav: {
-    width: 36,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
-    ...minTouch,
   },
-  profileNavText: { color: colors.blue600, fontSize: 28, fontWeight: "300", lineHeight: 30 },
+  profileNavText: { color: colors.brandBlue, fontSize: 24, fontWeight: "300", lineHeight: 26 },
   profileMain: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, minWidth: 0 },
-  profilePortrait: { width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: "#dce5ff" },
+  profilePortrait: { width: 46, height: 46, borderRadius: 23, borderWidth: 2, borderColor: colors.avatarRing },
   profileCopy: { flex: 1, minWidth: 0 },
-  profileGreeting: { color: colors.ink500, fontSize: 11 },
-  profileName: { color: colors.ink900, fontWeight: "700", fontSize: 15, lineHeight: 18 },
-  profileMeta: { color: colors.ink700, fontSize: 11, lineHeight: 15, marginTop: 2 },
+  profileGreeting: { color: colors.ink500, fontSize: 10, lineHeight: 12 },
+  profileName: { color: colors.ink900, fontWeight: "700", fontSize: 14, lineHeight: 17 },
+  profileMeta: { color: colors.ink700, fontSize: 10, lineHeight: 13, marginTop: 1 },
   profilePager: {
     textAlign: "center",
     color: colors.ink500,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "600",
-    marginBottom: 6,
+    marginBottom: 4,
     paddingHorizontal: 12,
+    lineHeight: 11,
   },
   feed: { flex: 1 },
-  feedContent: { paddingHorizontal: 12, paddingBottom: 8, gap: 10 },
+  feedContent: { paddingHorizontal: 12, paddingBottom: 6, gap: 8 },
   proactive: {
-    backgroundColor: "#eef1ff",
-    borderRadius: 12,
+    backgroundColor: colors.blueTint,
+    borderRadius: 10,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderWidth: 1,
     borderColor: colors.line,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.brandOrange,
+    alignSelf: "stretch",
   },
-  proactiveTitle: { color: colors.ink900, fontWeight: "700", fontSize: 13, lineHeight: 17 },
-  proactiveText: { color: colors.ink700, fontSize: 11, marginTop: 2, lineHeight: 15 },
+  proactiveTitle: { color: colors.ink900, fontWeight: "700", fontSize: 12, lineHeight: 15 },
+  proactiveText: { color: colors.ink700, fontSize: 10, marginTop: 2, lineHeight: 13 },
   userBubbleWrap: { alignItems: "flex-end" },
   assistantBubbleWrap: { alignItems: "flex-start", maxWidth: "100%" },
   assistantRow: { flexDirection: "row", alignItems: "flex-end", gap: 8, maxWidth: "100%" },
-  bubbleAvatar: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: "#dce5ff" },
+  bubbleAvatar: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: colors.avatarRing },
   userBubble: {
-    backgroundColor: colors.blue600,
+    backgroundColor: colors.brandBlue,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -332,35 +347,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  userText: { color: "#fff", fontSize: 15, lineHeight: 20 },
+  userText: { color: colors.onPrimary, fontSize: 15, lineHeight: 20 },
   assistantText: { color: colors.ink900, fontSize: 15, lineHeight: 20 },
   factCard: {
-    marginTop: 6,
+    marginTop: 4,
     marginLeft: 36,
     backgroundColor: colors.surface,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
     borderWidth: 1,
     borderColor: colors.line,
     maxWidth: "92%",
+    alignSelf: "flex-start",
   },
-  factVerdict: { color: colors.blue600, fontWeight: "700", fontSize: 12, marginBottom: 2 },
+  factVerdict: { color: colors.green700, fontWeight: "700", fontSize: 12, marginBottom: 2 },
   factClaim: { color: colors.ink900, fontWeight: "600", fontSize: 13, lineHeight: 17 },
   factFinding: { color: colors.ink700, fontSize: 12, lineHeight: 16, marginTop: 4 },
   factSource: { color: colors.ink500, fontSize: 10, marginTop: 3, lineHeight: 13 },
   planCard: {
-    marginTop: 6,
+    marginTop: 4,
     marginLeft: 36,
     backgroundColor: colors.surface,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
     borderWidth: 1,
-    borderColor: colors.mint500,
+    borderColor: colors.green700,
     maxWidth: "92%",
+    alignSelf: "flex-start",
   },
-  planEyebrow: { color: colors.blue600, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 },
+  planEyebrow: { color: colors.brandBlue, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 },
   planTitle: { color: colors.ink900, fontSize: 15, fontWeight: "700", marginTop: 2, lineHeight: 19 },
   planSummary: { color: colors.ink700, fontSize: 12, marginTop: 4, lineHeight: 16 },
   planFact: { color: colors.ink700, fontSize: 11, marginTop: 2, lineHeight: 14 },
@@ -373,38 +390,44 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     backgroundColor: colors.surfaceSoft,
   },
-  deviceChipSelected: { borderColor: colors.blue600, backgroundColor: "#eef1ff" },
+  deviceChipSelected: { borderColor: colors.brandBlue, backgroundColor: colors.blueTint },
   deviceChipText: { color: colors.ink900, fontSize: 11 },
   primaryButton: {
-    marginTop: 8,
-    backgroundColor: colors.blue600,
-    borderRadius: 10,
-    paddingVertical: 10,
+    marginTop: 6,
+    backgroundColor: colors.brandBlue,
+    borderRadius: 9,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     alignItems: "center",
-    minHeight: 44,
-    justifyContent: "center",
+    alignSelf: "stretch",
   },
-  primaryButtonText: { color: "#fff", fontWeight: "700", fontSize: 13 },
-  completedLabel: { marginTop: 6, color: colors.ink500, fontSize: 11 },
+  primaryButtonText: { color: colors.onPrimary, fontWeight: "700", fontSize: 12, lineHeight: 15 },
+  completedLabel: { marginTop: 4, color: colors.ink500, fontSize: 10, lineHeight: 12 },
   thinkingRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  thinkingText: { color: colors.ink500, fontSize: 12 },
-  promptRow: { paddingHorizontal: 12, gap: 6, paddingBottom: 6 },
+  thinkingText: { color: colors.ink500, fontSize: 11, lineHeight: 14 },
+  promptWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingBottom: 4,
+  },
   promptChip: {
     backgroundColor: colors.surface,
-    borderRadius: 12,
+    borderRadius: 999,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 5,
     borderWidth: 1,
     borderColor: colors.line,
-    minHeight: 40,
-    justifyContent: "center",
+    alignSelf: "flex-start",
   },
-  promptChipText: { color: colors.ink900, fontSize: 11, fontWeight: "600" },
+  promptChipPressed: { backgroundColor: colors.blueTint, borderColor: colors.brandBlue },
+  promptChipText: { color: colors.ink900, fontSize: 11, fontWeight: "600", lineHeight: 14 },
   composer: {
     flexDirection: "row",
     gap: 8,
     paddingHorizontal: 12,
-    paddingTop: 6,
+    paddingTop: 4,
     backgroundColor: colors.page,
   },
   input: {
@@ -419,13 +442,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   sendButton: {
-    backgroundColor: colors.mint500,
+    backgroundColor: colors.brandGreenBright,
     borderRadius: 12,
     paddingHorizontal: 14,
+    paddingVertical: 10,
     justifyContent: "center",
-    minHeight: 44,
   },
-  sendButtonText: { color: colors.navy950, fontWeight: "700" },
-  humanHelp: { alignItems: "center", paddingVertical: 6, minHeight: 40, justifyContent: "center" },
-  humanHelpText: { color: colors.blue600, fontSize: 11, fontWeight: "600" },
+  sendButtonText: { color: colors.brandNavy, fontWeight: "700", fontSize: 13, lineHeight: 16 },
+  humanHelp: { alignItems: "center", paddingVertical: 4 },
+  humanHelpText: { color: colors.brandBlue, fontSize: 10, fontWeight: "600", lineHeight: 12 },
 });

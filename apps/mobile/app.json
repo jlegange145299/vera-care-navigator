@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/vera-portrait.jpg",
       "resizeMode": "contain",
-      "backgroundColor": "#0f172a"
+      "backgroundColor": "#110081"
     },
     "ios": {
       "supportsTablet": true,
@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/vera-portrait.jpg",
-        "backgroundColor": "#0f172a"
+        "backgroundColor": "#110081"
       },
       "package": "com.vera.carenavigator"
     },

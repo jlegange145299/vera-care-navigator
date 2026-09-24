@@ -1,18 +1,34 @@
 import { Platform } from "react-native";
 
+/** Cigna brand palette (normalized from provided swatches). */
 export const colors = {
-  navy950: "#081542",
-  navy900: "#11106f",
-  blue600: "#1743f5",
-  mint500: "#25e5ae",
-  ink900: "#101939",
-  ink700: "#3f4966",
-  ink500: "#6f7893",
-  line: "#e1e6f0",
-  surface: "#ffffff",
-  surfaceSoft: "#f7f9fc",
-  page: "#f4f7fc",
-  coral: "#ff8d7c",
+  brandNavy: "#110081",
+  brandBlue: "#0033FF",
+  brandGreen: "#00874D",
+  brandGreenBright: "#03CC54",
+  brandOrange: "#FF4D00",
+  brandPeach: "#FAA163",
+
+  /** Semantic aliases used across screens */
+  navy950: "#110081",
+  navy900: "#110081",
+  blue600: "#0033FF",
+  mint500: "#03CC54",
+  green700: "#00874D",
+  orange600: "#FF4D00",
+  peach400: "#FAA163",
+  coral: "#FF4D00",
+
+  ink900: "#110081",
+  ink700: "#3D3D56",
+  ink500: "#6A6A82",
+  line: "#DDE2F0",
+  surface: "#FFFFFF",
+  surfaceSoft: "#F4F6FB",
+  page: "#EEF1F8",
+  blueTint: "#E8EEFF",
+  avatarRing: "#B8C9FF",
+  onPrimary: "#FFFFFF",
 };
 
 export const safariWeb = Platform.OS === "web" ? ({ WebkitOverflowScrolling: "touch" } as const) : {};

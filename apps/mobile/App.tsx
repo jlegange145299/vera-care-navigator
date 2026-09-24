@@ -21,7 +21,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-        <StatusBar style="dark" />
+        <StatusBar style="dark" backgroundColor={colors.surface} />
         <KeyboardAvoidingView
           style={styles.flex}
           behavior={Platform.OS === "ios" ? "padding" : undefined}

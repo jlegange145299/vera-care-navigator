@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: "#dce5ff",
+    borderColor: colors.avatarRing,
   },
   brandCopy: { flexShrink: 1 },
   brand: { color: colors.navy950, fontSize: 20, fontWeight: "800", lineHeight: 22 },

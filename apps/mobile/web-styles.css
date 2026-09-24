@@ -11,9 +11,15 @@ body {
   overscroll-behavior-y: none;
   -webkit-text-size-adjust: 100%;
   touch-action: manipulation;
+  background-color: #eef1f8;
 }
 
 input,
 textarea {
   font-size: 16px;
+}
+
+/* Keep RN Web pressables from stretching like full-height buttons */
+[role="button"] {
+  box-sizing: border-box;
 }
