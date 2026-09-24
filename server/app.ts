@@ -46,6 +46,8 @@ const liveAvatarConnectSrc = [
   "wss://*.livekit.cloud",
   "https://*.turn.livekit.cloud",
   "wss://*.turn.livekit.cloud",
+  "https://*.host.livekit.cloud",
+  "wss://*.host.livekit.cloud",
 ] as const;
 
 export function createApp() {
