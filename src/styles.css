@@ -681,20 +681,24 @@ h3,
   --photo-top: -7%;
 
   /* Seam between the lips, measured from the top of the image. */
-  --mouth-line: 44.3%;
+  --mouth-line: 42.4%;
   --mouth-center: 49.8%;
-  --mouth-width: 9.5%;
-  --mouth-depth: 2.6%;
+  --mouth-width: 13%;
+  --mouth-depth: 3.4%;
 
   /* Soft ellipse that limits jaw travel to the mouth and chin. */
-  --jaw-radius-x: 13%;
-  --jaw-radius-y: 8%;
+  --jaw-radius-x: 16%;
+  --jaw-radius-y: 9%;
   --jaw-center: 47%;
 
   /* Strip of eyelid skin between the brow and the open eye. */
-  --lid-top: 30.15%;
-  --lid-bottom: 31.15%;
-  --lid-stretch: 3.6;
+  --lid-top: 30.8%;
+  --lid-bottom: 32.4%;
+  --lid-stretch: 1.9;
+  --left-lid-left: 36.6%;
+  --left-lid-right: 55.6%;
+  --right-lid-left: 55%;
+  --right-lid-right: 38.4%;
 
   position: absolute;
   inset: 0;
@@ -702,22 +706,30 @@ h3,
 
 .vera-photo--noor {
   --photo-top: -4%;
-  --mouth-line: 43.4%;
+  --mouth-line: 38.8%;
   --mouth-center: 49.9%;
-  --mouth-width: 10%;
-  --jaw-center: 46.2%;
-  --lid-top: 31.2%;
-  --lid-bottom: 32.2%;
+  --mouth-width: 13.5%;
+  --mouth-depth: 3.8%;
+  --jaw-center: 42.6%;
+  --lid-top: 25%;
+  --lid-bottom: 27.2%;
+  --lid-stretch: 1.55;
+  --left-lid-left: 39%;
+  --left-lid-right: 53%;
+  --right-lid-left: 52.5%;
+  --right-lid-right: 38.5%;
 }
 
 .vera-photo--josh {
   --photo-top: -4%;
-  --mouth-line: 49.2%;
+  --mouth-line: 50.6%;
   --mouth-center: 50%;
-  --mouth-width: 10.5%;
-  --jaw-center: 51.8%;
-  --lid-top: 35.1%;
-  --lid-bottom: 36.1%;
+  --mouth-width: 14%;
+  --mouth-depth: 3.6%;
+  --jaw-center: 54%;
+  --lid-top: 35.8%;
+  --lid-bottom: 37.6%;
+  --lid-stretch: 1.7;
 }
 
 .vera-photo__placeholder {
@@ -776,6 +788,9 @@ h3,
 .vera-photo__jaw {
   clip-path: inset(var(--mouth-line) 0 0 0);
   transform-origin: 50% var(--mouth-line);
+  transform: translateY(calc(var(--speech-mouth-open, 0) * 1.5%))
+    scaleY(calc(1 + var(--speech-mouth-open, 0) * 0.06));
+  transition: transform 100ms ease-out;
   mask-image: radial-gradient(
     ellipse var(--jaw-radius-x) var(--jaw-radius-y) at var(--mouth-center) var(--jaw-center),
     #000 50%,
@@ -783,7 +798,7 @@ h3,
   );
 }
 
-.avatar-stage--speaking .vera-photo__jaw {
+.avatar-stage--speaking:not(.avatar-stage--lip-synced) .vera-photo__jaw {
   animation: veraJaw 0.46s ease-in-out infinite;
 }
 
@@ -792,18 +807,23 @@ h3,
   top: calc(var(--mouth-line) + 0.2%);
   left: var(--mouth-center);
   width: var(--mouth-width);
-  height: var(--mouth-depth);
+  height: calc(var(--mouth-depth) * var(--speech-mouth-open, 0.3));
   border-radius: 0 0 46% 46% / 0 0 82% 82%;
   /* Upper teeth at the lip line, then the darker cavity as the jaw drops. */
   background: linear-gradient(180deg, #e3d3cb 0%, #b08d86 9%, #56262b 26%, #2b1014 64%, #190a0c 100%);
   opacity: 0;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scaleY(1);
+  transform-origin: 50% 0;
   transition: opacity 140ms ease;
   filter: blur(0.8px);
 }
 
 .avatar-stage--speaking .vera-photo__mouth {
   opacity: 1;
+}
+
+.avatar-stage--speaking:not(.avatar-stage--lip-synced) .vera-photo__mouth {
+  animation: veraMouth 0.46s ease-in-out infinite alternate;
 }
 
 /* Without jaw motion there is nothing to reveal, so keep the mouth closed. */
@@ -820,16 +840,16 @@ h3,
 .vera-photo__lid {
   transform-origin: 50% var(--lid-top);
   transform: scaleY(1);
-  transition: transform 80ms ease-in;
+  transition: transform 110ms ease-out;
   filter: blur(0.4px);
 }
 
 .vera-photo__lid--left {
-  clip-path: inset(var(--lid-top) 55.6% calc(100% - var(--lid-bottom)) 36.6%);
+  clip-path: inset(var(--lid-top) var(--left-lid-right) calc(100% - var(--lid-bottom)) var(--left-lid-left));
 }
 
 .vera-photo__lid--right {
-  clip-path: inset(var(--lid-top) 38.4% calc(100% - var(--lid-bottom)) 55%);
+  clip-path: inset(var(--lid-top) var(--right-lid-right) calc(100% - var(--lid-bottom)) var(--right-lid-left));
 }
 
 .vera-photo--blinking .vera-photo__lid {
@@ -3569,6 +3589,13 @@ h3,
   70% { transform: translateY(0.5%) scaleY(1.006); }
   86% { transform: translateY(1%) scaleY(1.014); }
   100% { transform: translateY(0) scaleY(1); }
+}
+
+@keyframes veraMouth {
+  0% { transform: translateX(-50%) scaleY(0.25); }
+  42% { transform: translateX(-50%) scaleY(0.78); }
+  72% { transform: translateX(-50%) scaleY(0.42); }
+  100% { transform: translateX(-50%) scaleY(1); }
 }
 
 @keyframes orbitBreathe {

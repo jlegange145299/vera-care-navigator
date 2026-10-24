@@ -1,17 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { AvatarStatus, MemberProfile } from "../types";
 
 const BLINK_CLOSED_MS = 150;
-const BLINK_GAP_MIN_MS = 3200;
-const BLINK_GAP_MAX_MS = 7000;
 
 interface VeraPortraitProps {
   status: AvatarStatus;
   profile: MemberProfile;
+  speechMouthOpen?: number;
 }
 
 function prefersReducedMotion() {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+}
+
+function blinkInterval(status: AvatarStatus) {
+  if (status === "speaking") return [2200, 4800] as const;
+  if (status === "thinking") return [2700, 5700] as const;
+  if (status === "listening") return [3000, 6200] as const;
+  return [3500, 7600] as const;
 }
 
 /**
@@ -20,7 +26,7 @@ function prefersReducedMotion() {
  * without a provider session. Landmark offsets live in styles.css as custom
  * properties because they are measured against this specific image.
  */
-export function VeraPortrait({ status, profile }: VeraPortraitProps) {
+export function VeraPortrait({ status, profile, speechMouthOpen = 0.3 }: VeraPortraitProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
   const [isBlinking, setIsBlinking] = useState(false);
@@ -33,17 +39,30 @@ export function VeraPortrait({ status, profile }: VeraPortraitProps) {
   useEffect(() => {
     if (!isLoaded || prefersReducedMotion()) return;
 
+    setIsBlinking(false);
     let closeTimer = 0;
     let openTimer = 0;
+    let secondBlinkTimer = 0;
 
     const scheduleBlink = () => {
-      const gap = BLINK_GAP_MIN_MS + Math.random() * (BLINK_GAP_MAX_MS - BLINK_GAP_MIN_MS);
+      const [minimum, maximum] = blinkInterval(status);
+      const gap = minimum + Math.random() * (maximum - minimum);
       closeTimer = window.setTimeout(() => {
         setIsBlinking(true);
         openTimer = window.setTimeout(() => {
           setIsBlinking(false);
-          scheduleBlink();
-        }, BLINK_CLOSED_MS);
+          if (Math.random() < 0.14) {
+            secondBlinkTimer = window.setTimeout(() => {
+              setIsBlinking(true);
+              openTimer = window.setTimeout(() => {
+                setIsBlinking(false);
+                scheduleBlink();
+              }, BLINK_CLOSED_MS);
+            }, 180 + Math.random() * 100);
+          } else {
+            scheduleBlink();
+          }
+        }, BLINK_CLOSED_MS + Math.random() * 55);
       }, gap);
     };
 
@@ -52,21 +71,19 @@ export function VeraPortrait({ status, profile }: VeraPortraitProps) {
     return () => {
       window.clearTimeout(closeTimer);
       window.clearTimeout(openTimer);
+      window.clearTimeout(secondBlinkTimer);
     };
-  }, [isLoaded]);
+  }, [isLoaded, status]);
 
-  // A blink on every turn boundary reads as Vera reacting to the member.
-  useEffect(() => {
-    if (status === "idle" || !isLoaded || prefersReducedMotion()) return;
-
-    setIsBlinking(true);
-    const openTimer = window.setTimeout(() => setIsBlinking(false), BLINK_CLOSED_MS);
-
-    return () => window.clearTimeout(openTimer);
-  }, [status, isLoaded]);
+  const portraitStyle: CSSProperties & { "--speech-mouth-open": number } = {
+    "--speech-mouth-open": speechMouthOpen,
+  };
 
   return (
-    <div className={`vera-photo vera-photo--${profile.id}${isBlinking ? " vera-photo--blinking" : ""}`}>
+    <div
+      className={`vera-photo vera-photo--${profile.id}${isBlinking ? " vera-photo--blinking" : ""}`}
+      style={portraitStyle}
+    >
       {/* Stays mounted underneath so a slow or failed image never leaves an empty stage. */}
       <div className="vera-photo__placeholder">{profile.initials}</div>
 

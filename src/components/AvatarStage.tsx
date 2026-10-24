@@ -12,6 +12,7 @@ import { VeraPortrait } from "./VeraPortrait";
 
 interface AvatarStageProps {
   status: AvatarStatus;
+  speechMouthOpen: number | null;
   profile: MemberProfile;
   isListening: boolean;
   voiceSupported: boolean;
@@ -45,6 +46,7 @@ const avatarErrorCopy = {
 
 export function AvatarStage({
   status,
+  speechMouthOpen,
   profile,
   isListening: _isListening,
   voiceSupported: _voiceSupported,
@@ -182,7 +184,7 @@ export function AvatarStage({
 
   const avatarStage = (
     <section
-      className={`avatar-stage avatar-stage--${status}${compact ? " avatar-stage--header" : ""}${featured ? " avatar-stage--featured" : ""}`}
+      className={`avatar-stage avatar-stage--${status}${speechMouthOpen !== null ? " avatar-stage--lip-synced" : ""}${compact ? " avatar-stage--header" : ""}${featured ? " avatar-stage--featured" : ""}`}
       aria-label={profile.avatarLabel}
     >
       <div className="avatar-stage__glow avatar-stage__glow--one" aria-hidden="true" />
@@ -219,7 +221,7 @@ export function AvatarStage({
         <>
           <div className="avatar-visual" aria-hidden="true">
             <div className="avatar-portrait">
-              <VeraPortrait status={status} profile={profile} />
+              <VeraPortrait status={status} profile={profile} speechMouthOpen={speechMouthOpen ?? undefined} />
             </div>
           </div>
 

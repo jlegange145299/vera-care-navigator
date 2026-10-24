@@ -119,7 +119,7 @@ LiveAvatar starts automatically when the member experience opens, so the real-ti
 
 ### Built-in avatar
 
-The credential-free avatar uses one of three generated still portraits, selected with the member profile control. A jaw layer, mouth cavity, and eyelid layers are composited over each portrait so Vera breathes, blinks, and speaks without any provider session. The faces are **generated, not real people**, and no likeness rights are implied; replacing one means retuning its landmark custom properties in `src/styles.css`. Motion is suppressed under `prefers-reduced-motion`.
+The credential-free avatar uses one of three generated still portraits, selected with the member profile control. A jaw layer, mouth cavity, and eyelid layers are composited over each portrait so Vera breathes, blinks, and speaks without any provider session. Browser speech prefers higher-quality installed English voices and follows word boundaries for approximate mouth movement when the browser supports them; available voices vary by device and browser. Face landmarks are tuned per portrait in `src/styles.css`. The faces are **generated, not real people**, and no likeness rights are implied. Motion is suppressed under `prefers-reduced-motion`.
 
 ## Validation
 

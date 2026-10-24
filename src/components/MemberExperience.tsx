@@ -26,6 +26,7 @@ interface MemberExperienceProps {
   messages: ChatMessage[];
   isThinking: boolean;
   isSpeaking: boolean;
+  speechMouthOpen: number | null;
   speechEnabled: boolean;
   completedActions: Set<string>;
   linkedDevices: WellnessDeviceId[];
@@ -41,6 +42,7 @@ export function MemberExperience({
   messages,
   isThinking,
   isSpeaking,
+  speechMouthOpen,
   speechEnabled,
   completedActions,
   linkedDevices,
@@ -136,6 +138,7 @@ export function MemberExperience({
         <AvatarStage
           profile={profile}
           status={avatarStatus}
+          speechMouthOpen={speechMouthOpen}
           isListening={isListening}
           voiceSupported={isSupported}
           interimTranscript={interimTranscript}

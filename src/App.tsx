@@ -29,7 +29,7 @@ function App() {
   const [locationMethod, setLocationMethod] = useState<"ip" | "gps">("ip");
   const requestRef = useRef<AbortController | null>(null);
   const liveAvatarSpeechRef = useRef<AvatarSpeechControl | null>(null);
-  const { isSpeaking, speak, stop } = useSpeechOutput(speechEnabled, profile.genderLabel);
+  const { isSpeaking, speechMouthOpen, speak, stop } = useSpeechOutput(speechEnabled, profile.genderLabel);
 
   const handleLiveAvatarSpeechReady = useCallback((speech: AvatarSpeechControl | null) => {
     liveAvatarSpeechRef.current = speech;
@@ -237,6 +237,7 @@ function App() {
           messages={messages}
           isThinking={isThinking}
           isSpeaking={isSpeaking}
+          speechMouthOpen={speechMouthOpen}
           speechEnabled={speechEnabled}
           completedActions={completedActions}
           linkedDevices={linkedDevices}
