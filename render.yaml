@@ -29,4 +29,4 @@ services:
       - key: NODE_VERSION
         value: 24.14.0
       - key: EXPO_PUBLIC_VERA_API_URL
-        sync: false
+        value: https://vera-care-navigator.onrender.com

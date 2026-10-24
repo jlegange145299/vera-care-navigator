@@ -49,7 +49,7 @@ Shared journeys and copy live in `packages/core` and are imported by both the Vi
 | **Expo web (local)** | `npm run web -w vera-mobile` | Same RN UI in a mobile browser |
 | **Render** | Blueprint services `vera-care-navigator` + `vera-mobile-web` | Two public URLs |
 
-After deploy, set **`CORS_ORIGINS`** on the desktop service to your mobile web URL (for example `https://vera-mobile-web.onrender.com`) and set **`EXPO_PUBLIC_VERA_API_URL`** on the mobile static service to the desktop URL (for example `https://vera-care-navigator.onrender.com`). The app calls that API for chat and LiveAvatar sessions; chat falls back to deterministic replies from `@vera/core` if the network fails. LiveAvatar video and spoken responses run in the Render mobile web app and native development builds; Expo Go retains the portrait fallback.
+The Render blueprint configures **`EXPO_PUBLIC_VERA_API_URL`** on the mobile static service to the desktop API URL. Set **`CORS_ORIGINS`** on the desktop service to the mobile web URL (for example `https://vera-mobile-web.onrender.com`). The app calls the API for chat and LiveAvatar sessions; chat falls back to deterministic replies from `@vera/core` if the network fails. LiveAvatar video and spoken responses run in the Render mobile web app and native development builds; Expo Go retains the portrait fallback.
 
 Expo Go (local):
 
@@ -154,7 +154,7 @@ The suite covers deterministic intent/safety behavior, API validation and header
 2. In Render, create a Blueprint from the repository. `render.yaml` defines:
    - **`vera-care-navigator`** — Node web service (Vite build + Express API + health check)
    - **`vera-mobile-web`** — static Expo web export for judges who want a mobile URL in the browser
-3. Set **`EXPO_PUBLIC_VERA_API_URL`** on the mobile service to the desktop service URL.
+3. Confirm the Render blueprint sets **`EXPO_PUBLIC_VERA_API_URL`** on the mobile service to the desktop service URL.
 4. Set **`CORS_ORIGINS`** on the desktop service to the mobile web origin (comma-separated if needed).
 5. Add `OPENAI_API_KEY` and/or `LIVEAVATAR_API_KEY` on the desktop service only if connected mode is required.
 6. Deploy and verify `/api/health`, member journeys on desktop, LiveAvatar video and speech on mobile web, and the judge walkthrough on desktop. Verify LiveAvatar in an iOS/Android development build, not Expo Go.
