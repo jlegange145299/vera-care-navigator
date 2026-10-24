@@ -28,7 +28,7 @@ All identities, benefits, claims, provider availability, status events, costs, a
 ## Stack
 
 - React 19 + TypeScript + Vite (browser / desktop judges)
-- Expo + React Native (`apps/mobile`) for Expo Go and Expo web on Render
+- Expo + React Native (`apps/mobile`) for native iOS/Android and Expo web on Render
 - Shared demo content in `@vera/core` (`packages/core`) — journeys, fact-check, profiles, copy
 - Node.js + Express
 - OpenAI Responses API (optional, server-side)
@@ -37,18 +37,19 @@ All identities, benefits, claims, provider availability, status events, costs, a
 - Vitest, Testing Library, and Supertest
 - Render Blueprint for **two** judge surfaces: desktop web + mobile web (static Expo export)
 
-## Mobile (Expo Go + Expo web)
+## Mobile (Expo native + Expo web)
 
 Shared journeys and copy live in `packages/core` and are imported by both the Vite app and `apps/mobile`.
 
 | Surface | Command | Judge use |
 |--------|---------|-----------|
 | **Desktop browser** | `npm run dev` → `http://localhost:5173` | Full member + Friction Intelligence dashboard |
-| **Expo Go (phone)** | `npm run dev:mobile` → scan QR in Expo Go | Native member experience |
+| **Expo Go (phone)** | `npm run dev:mobile` → scan QR in Expo Go | Native member experience with portrait fallback |
+| **Native development build** | Build with `expo-dev-client`, then `npx expo start` | Native member experience with LiveAvatar video and speech |
 | **Expo web (local)** | `npm run web -w vera-mobile` | Same RN UI in a mobile browser |
 | **Render** | Blueprint services `vera-care-navigator` + `vera-mobile-web` | Two public URLs |
 
-After deploy, set **`CORS_ORIGINS`** on the desktop service to your mobile web URL (for example `https://vera-mobile-web.onrender.com`) and set **`EXPO_PUBLIC_VERA_API_URL`** on the mobile static service to the desktop URL (for example `https://vera-care-navigator.onrender.com`). The mobile app calls that API for chat; if the network fails, it falls back to the same deterministic logic from `@vera/core` as the browser app.
+After deploy, set **`CORS_ORIGINS`** on the desktop service to your mobile web URL (for example `https://vera-mobile-web.onrender.com`) and set **`EXPO_PUBLIC_VERA_API_URL`** on the mobile static service to the desktop URL (for example `https://vera-care-navigator.onrender.com`). The app calls that API for chat and native LiveAvatar sessions; chat falls back to deterministic replies from `@vera/core` if the network fails. LiveAvatar runs in the native development build; Expo Go and the Expo web export keep the portrait fallback.
 
 Expo Go (local):
 
@@ -58,6 +59,16 @@ npm run dev:mobile
 ```
 
 Install [Expo Go](https://expo.dev/go) on your phone, ensure the phone can reach your machine (same Wi‑Fi or use Expo’s tunnel option in the CLI), and scan the QR code.
+
+Native LiveAvatar development build:
+
+```cmd
+cd apps\mobile
+set EXPO_PUBLIC_VERA_API_URL=https://your-desktop-service.onrender.com
+npx expo run:android
+```
+
+For iOS, run `npx expo run:ios` on macOS. LiveAvatar uses native WebRTC and is not supported in Expo Go; rebuild after adding its native packages or changing Expo plugins. The LiveAvatar API key remains on the server and must be configured there.
 
 Expo web export (matches Render mobile build):
 
@@ -146,7 +157,7 @@ The suite covers deterministic intent/safety behavior, API validation and header
 3. Set **`EXPO_PUBLIC_VERA_API_URL`** on the mobile service to the desktop service URL.
 4. Set **`CORS_ORIGINS`** on the desktop service to the mobile web origin (comma-separated if needed).
 5. Add `OPENAI_API_KEY` and/or `LIVEAVATAR_API_KEY` on the desktop service only if connected mode is required.
-6. Deploy and verify `/api/health`, member journeys on desktop, the same journeys on mobile web / Expo Go, and the judge walkthrough on desktop.
+6. Deploy and verify `/api/health`, member journeys on desktop, the same journeys on mobile web / Expo Go, and the judge walkthrough on desktop. Verify LiveAvatar in an iOS/Android development build, not Expo Go.
 
 The desktop Express process serves the compiled React app and `/api/*`. The mobile static site is a separate URL; it calls the desktop API cross-origin with CORS enabled.
 

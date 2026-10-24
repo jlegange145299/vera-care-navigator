@@ -15,6 +15,15 @@ export interface VeraApiReply {
   factCheck?: FactCheckResult;
 }
 
+export interface LiveAvatarMobileSessionReply {
+  available: boolean;
+  sessionToken?: string;
+  sessionId?: string;
+  livekitUrl?: string;
+  livekitClientToken?: string;
+  reason?: "not_configured" | "provider_unavailable" | "invalid_provider_response";
+}
+
 const DEV_API = "http://localhost:8787";
 const REQUEST_TIMEOUT_MS = 8000;
 
@@ -65,4 +74,47 @@ export async function requestVeraReply(
     clearTimeout(timeoutId);
     signal?.removeEventListener("abort", onExternalAbort);
   }
+}
+
+export async function requestLiveAvatarMobileSession(
+  signal?: AbortSignal,
+): Promise<LiveAvatarMobileSessionReply> {
+  const base = apiBaseUrl();
+  if (!base) throw new Error("Vera API URL is not configured for this build");
+
+  const response = await fetch(`${base}/api/avatar/mobile-session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+    signal,
+  });
+  if (!response.ok) throw new Error(`Avatar API returned ${response.status}`);
+
+  const data = (await response.json()) as unknown;
+  if (!data || typeof data !== "object" || typeof (data as Record<string, unknown>).available !== "boolean") {
+    throw new Error("Avatar API returned an invalid response");
+  }
+  const session = data as Record<string, unknown>;
+  if (
+    session.available &&
+    (typeof session.sessionToken !== "string" ||
+      typeof session.sessionId !== "string" ||
+      typeof session.livekitUrl !== "string" ||
+      typeof session.livekitClientToken !== "string")
+  ) {
+    throw new Error("Avatar API returned an incomplete mobile session");
+  }
+  return data as LiveAvatarMobileSessionReply;
+}
+
+export async function stopLiveAvatarMobileSession(sessionToken: string): Promise<void> {
+  const base = apiBaseUrl();
+  if (!base) throw new Error("Vera API URL is not configured for this build");
+
+  const response = await fetch(`${base}/api/avatar/mobile-session/stop`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionToken }),
+  });
+  if (!response.ok) throw new Error(`Avatar API returned ${response.status}`);
 }

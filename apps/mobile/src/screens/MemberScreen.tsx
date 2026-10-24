@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { demoScenarios, factCheckPrompt, type ActionCompletion, type ActionPlan, type ChatMessage, type MemberProfile, type WellnessDeviceId } from "@vera/core";
 import { memberProfiles, profilePortrait } from "../memberProfiles";
+import { LiveAvatarPanel } from "../components/LiveAvatarPanel";
 import { colors, safariWeb } from "../theme";
 
 function verdictLabel(verdict: string) {
@@ -126,6 +127,7 @@ export function MemberScreen({
 }: MemberScreenProps) {
   const [draft, setDraft] = useState("");
   const profileIndex = Math.max(0, memberProfiles.findIndex((item) => item.id === profile.id));
+  const latestAssistantMessage = [...messages].reverse().find((message) => message.role === "assistant") ?? null;
 
   const cycleProfile = (delta: number) => {
     const next = memberProfiles[(profileIndex + delta + memberProfiles.length) % memberProfiles.length];
@@ -179,6 +181,11 @@ export function MemberScreen({
       <Text style={styles.profilePager}>
         Profile {profileIndex + 1} of {memberProfiles.length} · {profile.avatarLabel}
       </Text>
+
+      <LiveAvatarPanel
+        portrait={profilePortrait(profile.id)}
+        assistantMessage={latestAssistantMessage}
+      />
 
       <ScrollView style={[styles.feed, safariWeb]} contentContainerStyle={styles.feedContent} keyboardShouldPersistTaps="handled">
         <View style={styles.proactive}>

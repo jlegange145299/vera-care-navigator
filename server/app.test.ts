@@ -123,6 +123,18 @@ describe("Vera API", () => {
     expect(response.body).toEqual({ available: false, reason: "not_configured" });
   });
 
+  it("keeps native LiveAvatar optional and validates session stop requests", async () => {
+    const app = createApp();
+    const startResponse = await request(app).post("/api/avatar/mobile-session").send({}).expect(200);
+    expect(startResponse.body).toEqual({ available: false, reason: "not_configured" });
+
+    const stopResponse = await request(app)
+      .post("/api/avatar/mobile-session/stop")
+      .send({ sessionToken: "", extra: true })
+      .expect(400);
+    expect(stopResponse.body.error).toBe("Invalid avatar session request.");
+  });
+
   it("returns a generic response for unknown API paths", async () => {
     const response = await request(createApp()).get("/api/unknown").expect(404);
     expect(response.body).toEqual({ error: "API route not found." });

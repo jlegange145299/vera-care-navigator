@@ -6,7 +6,7 @@ import express, { type ErrorRequestHandler } from "express";
 import { rateLimit } from "express-rate-limit";
 import helmet from "helmet";
 import { z } from "zod";
-import { createLiveAvatarSession } from "./liveAvatar.js";
+import { createLiveAvatarSession, createStartedLiveAvatarSession, stopLiveAvatarSession } from "./liveAvatar.js";
 import { generateVeraReply } from "./vera.js";
 
 const chatRequestSchema = z
@@ -23,6 +23,8 @@ const chatRequestSchema = z
       .default([]),
   })
   .strict();
+
+const mobileAvatarStopSchema = z.object({ sessionToken: z.string().trim().min(1).max(8_192) }).strict();
 
 function createRateLimiter(limit: number) {
   return rateLimit({
@@ -132,6 +134,35 @@ export function createApp() {
       sessionToken: session.session_token,
       reason: session.reason,
     });
+  });
+
+  app.post("/api/avatar/mobile-session", createRateLimiter(5), async (_request, response) => {
+    const session = await createStartedLiveAvatarSession();
+    response.json({
+      available: session.available,
+      sessionToken: session.session_token,
+      sessionId: session.session_id,
+      livekitUrl: session.livekit_url,
+      livekitClientToken: session.livekit_client_token,
+      reason: session.reason,
+    });
+  });
+
+  app.post("/api/avatar/mobile-session/stop", createRateLimiter(10), async (request, response) => {
+    const parsedRequest = mobileAvatarStopSchema.safeParse(request.body);
+    if (!parsedRequest.success) {
+      response.status(400).json({ error: "Invalid avatar session request." });
+      return;
+    }
+
+    try {
+      await stopLiveAvatarSession(parsedRequest.data.sessionToken);
+      response.status(204).end();
+    } catch (error) {
+      const errorName = error instanceof Error ? error.name : "UnknownError";
+      console.warn(`LiveAvatar mobile session stop failed (${errorName}).`);
+      response.status(502).json({ error: "Could not stop the LiveAvatar session." });
+    }
   });
 
   app.use("/api", (_request, response) => {

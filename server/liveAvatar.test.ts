@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createLiveAvatarSession, parseSessionTokenFromResponse } from "./liveAvatar.js";
+import {
+  createLiveAvatarSession,
+  createStartedLiveAvatarSession,
+  parseSessionTokenFromResponse,
+  stopLiveAvatarSession,
+} from "./liveAvatar.js";
 
 describe("parseSessionTokenFromResponse", () => {
   it("reads nested LiveAvatar API envelopes", () => {
@@ -49,5 +54,49 @@ describe("createLiveAvatarSession", () => {
       available: true,
       session_token: "scoped-token",
     });
+  });
+
+  it("starts a native room with server-held session credentials", async () => {
+    process.env.LIVEAVATAR_API_KEY = "test-key";
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ code: 1000, data: { session_token: "scoped-token" } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          code: 1000,
+          data: {
+            session_id: "session-id",
+            livekit_url: "wss://room.livekit.cloud",
+            livekit_client_token: "client-token",
+          },
+        }),
+      }) as typeof fetch;
+
+    await expect(createStartedLiveAvatarSession()).resolves.toEqual({
+      available: true,
+      session_token: "scoped-token",
+      session_id: "session-id",
+      livekit_url: "wss://room.livekit.cloud",
+      livekit_client_token: "client-token",
+    });
+    expect(globalThis.fetch).toHaveBeenNthCalledWith(
+      2,
+      "https://api.liveavatar.com/v1/sessions/start",
+      expect.objectContaining({ headers: expect.objectContaining({ Authorization: `Bearer ${"scoped-token"}` }) }),
+    );
+  });
+
+  it("stops a native session with its scoped token", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true }) as typeof fetch;
+
+    await expect(stopLiveAvatarSession("scoped-token")).resolves.toBeUndefined();
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      "https://api.liveavatar.com/v1/sessions/stop",
+      expect.objectContaining({ headers: expect.objectContaining({ Authorization: `Bearer ${"scoped-token"}` }) }),
+    );
   });
 });

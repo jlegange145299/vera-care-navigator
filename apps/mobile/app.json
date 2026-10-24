@@ -23,6 +23,7 @@
       },
       "package": "com.vera.carenavigator"
     },
+    "plugins": ["@livekit/react-native-expo-plugin", "@config-plugins/react-native-webrtc"],
     "web": {
       "bundler": "metro",
       "output": "single",

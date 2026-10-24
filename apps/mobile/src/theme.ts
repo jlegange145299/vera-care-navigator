@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import { Platform, type ViewStyle } from "react-native";
 
 /** Cigna brand palette (normalized from provided swatches). */
 export const colors = {
@@ -31,6 +31,9 @@ export const colors = {
   onPrimary: "#FFFFFF",
 };
 
-export const safariWeb = Platform.OS === "web" ? ({ WebkitOverflowScrolling: "touch" } as const) : {};
+type SafariViewStyle = ViewStyle & { WebkitOverflowScrolling?: "auto" | "touch" };
+
+export const safariWeb: SafariViewStyle =
+  Platform.OS === "web" ? ({ WebkitOverflowScrolling: "touch" } as SafariViewStyle) : {};
 
 export const minTouch = { minHeight: 44, minWidth: 44 };
