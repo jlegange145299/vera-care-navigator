@@ -1,7 +1,45 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
+
+const liveAvatarMock = vi.hoisted(() => ({
+  attach: vi.fn(),
+  interrupt: vi.fn(),
+  message: vi.fn(),
+  start: vi.fn(async () => undefined),
+  stop: vi.fn(async () => undefined),
+}));
+
+vi.mock("@heygen/liveavatar-web-sdk", () => ({
+  LiveAvatarSession: class {
+    attach(element: HTMLMediaElement) {
+      liveAvatarMock.attach(element);
+    }
+
+    interrupt() {
+      liveAvatarMock.interrupt();
+    }
+
+    message(text: string) {
+      liveAvatarMock.message(text);
+    }
+
+    on() {}
+
+    start() {
+      return liveAvatarMock.start();
+    }
+
+    stop() {
+      return liveAvatarMock.stop();
+    }
+  },
+  SessionEvent: {
+    SESSION_DISCONNECTED: "session.disconnected",
+    SESSION_STREAM_READY: "session.stream_ready",
+  },
+}));
 
 function installDemoApi() {
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -27,7 +65,60 @@ function installDemoApi() {
   return fetchMock;
 }
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.clearAllMocks();
+});
+
 describe("Vera judged experience", () => {
+  it("starts LiveAvatar by default and routes its speech without browser TTS", async () => {
+    const user = userEvent.setup();
+    const speechSynthesis = {
+      addEventListener: vi.fn(),
+      cancel: vi.fn(),
+      getVoices: vi.fn(() => []),
+      removeEventListener: vi.fn(),
+      speak: vi.fn(),
+    };
+    vi.stubGlobal("speechSynthesis", speechSynthesis);
+    vi.stubGlobal("SpeechSynthesisUtterance", class {});
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith("/api/avatar/session")) {
+          return new Response(JSON.stringify({ available: true, sessionToken: "test-session-token" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        if (url.endsWith("/api/chat")) {
+          return new Response(
+            JSON.stringify({
+              text: "A 90-day home-delivery fill saves $312 each year.",
+              intent: "rx-savings",
+              planId: "rx-savings",
+              mode: "demo",
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
+        return new Response(JSON.stringify({ available: false, reason: "not_configured" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }),
+    );
+    render(<App />);
+
+    expect(await screen.findByRole("button", { name: /close liveavatar/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Lower my medication cost" }));
+    expect(await screen.findByText(/saves \$312 each year/i, {}, { timeout: 2_500 })).toBeInTheDocument();
+
+    expect(liveAvatarMock.message).toHaveBeenCalledWith("A 90-day home-delivery fill saves $312 each year.");
+    expect(speechSynthesis.speak).not.toHaveBeenCalled();
+  });
+
   it("switches among three demographic-matched member profiles and avatars", async () => {
     const user = userEvent.setup();
     installDemoApi();

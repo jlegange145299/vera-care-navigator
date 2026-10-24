@@ -1,5 +1,6 @@
 import { BarChart3, LockKeyhole, Menu, MessageCircle, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { AvatarSpeechControl } from "./components/AvatarStage";
 import { BrandMark } from "./components/BrandMark";
 import { DemoGuide } from "./components/DemoGuide";
 import { InsightsDashboard } from "./components/InsightsDashboard";
@@ -27,12 +28,46 @@ function App() {
   const [linkedDevices, setLinkedDevices] = useState<WellnessDeviceId[]>([]);
   const [locationMethod, setLocationMethod] = useState<"ip" | "gps">("ip");
   const requestRef = useRef<AbortController | null>(null);
-  const liveAvatarPromptRef = useRef<((text: string) => void) | null>(null);
+  const liveAvatarSpeechRef = useRef<AvatarSpeechControl | null>(null);
   const { isSpeaking, speak, stop } = useSpeechOutput(speechEnabled, profile.genderLabel);
 
-  const handleLiveAvatarPromptReady = useCallback((sendPrompt: ((text: string) => void) | null) => {
-    liveAvatarPromptRef.current = sendPrompt;
+  const handleLiveAvatarSpeechReady = useCallback((speech: AvatarSpeechControl | null) => {
+    liveAvatarSpeechRef.current = speech;
   }, []);
+
+  const stopResponse = useCallback(() => {
+    stop();
+    const liveAvatarSpeech = liveAvatarSpeechRef.current;
+    if (!liveAvatarSpeech) return true;
+    try {
+      liveAvatarSpeech.stop();
+      return true;
+    } catch (error) {
+      console.warn("LiveAvatar could not stop its current response.", error);
+      return false;
+    }
+  }, [stop]);
+
+  const speakResponse = useCallback(
+    (text: string) => {
+      const previousResponseStopped = stopResponse();
+      if (!previousResponseStopped || !speechEnabled) return;
+
+      const liveAvatarSpeech = liveAvatarSpeechRef.current;
+      if (liveAvatarSpeech) {
+        try {
+          liveAvatarSpeech.speak(text);
+          return;
+        } catch (error) {
+          console.warn("LiveAvatar could not speak the response; using browser speech.", error);
+          liveAvatarSpeechRef.current = null;
+        }
+      }
+
+      speak(text);
+    },
+    [speechEnabled, speak, stopResponse],
+  );
 
   useEffect(
     () => () => {
@@ -50,7 +85,7 @@ function App() {
   const selectProfile = (nextProfile: typeof profile) => {
     if (nextProfile.id === profile.id) return;
     requestRef.current?.abort();
-    stop();
+    stopResponse();
     setProfile(nextProfile);
     setMessages([createWelcomeMessage(nextProfile)]);
     setCompletedActions(new Set());
@@ -64,9 +99,7 @@ function App() {
     async (rawMessage: string) => {
       const text = rawMessage.trim();
       if (!text || isThinking) return;
-
-      stop();
-      liveAvatarPromptRef.current?.(text);
+      stopResponse();
       const history: ConversationHistoryItem[] = messages.slice(-8).map((message) => ({
         role: message.role,
         content: message.text,
@@ -122,9 +155,9 @@ function App() {
         factCheck,
       };
       setMessages((current) => [...current, assistantMessage]);
-      speak(responseText);
+      speakResponse(responseText);
     },
-    [isThinking, messages, completedActions, speak, stop],
+    [isThinking, messages, completedActions, speakResponse, stopResponse],
   );
 
   const handleCompleteAction = useCallback(
@@ -141,13 +174,13 @@ function App() {
         timestamp: "Action recorded just now",
       };
       setMessages((current) => [...current, message]);
-      speak(confirmation);
+      speakResponse(confirmation);
     },
-    [completedActions, speak],
+    [completedActions, speakResponse],
   );
 
   const toggleSpeech = () => {
-    if (speechEnabled) stop();
+    if (speechEnabled) stopResponse();
     setSpeechEnabled((current) => !current);
   };
 
@@ -211,7 +244,7 @@ function App() {
           onSend={handleSend}
           onCompleteAction={handleCompleteAction}
           onToggleSpeech={toggleSpeech}
-          onLiveAvatarPromptReady={handleLiveAvatarPromptReady}
+          onLiveAvatarSpeechReady={handleLiveAvatarSpeechReady}
         />
       ) : view === "wellness" ? (
         <WellnessBreakdown profile={profile} />

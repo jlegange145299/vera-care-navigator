@@ -16,7 +16,7 @@ import { factCheckPrompt } from "../data/factCheck";
 import { useVoiceInput } from "../hooks/useBrowserVoice";
 import type { ActionCompletion, ActionPlan, AvatarStatus, ChatMessage, MemberProfile, WellnessDeviceId } from "../types";
 import { ActionCard } from "./ActionCard";
-import { AvatarStage } from "./AvatarStage";
+import { AvatarStage, type AvatarSpeechControl } from "./AvatarStage";
 import { FactCheckCard } from "./FactCheckCard";
 import { HospitalPrepCard } from "./HospitalPrepCard";
 import { WellnessPulse } from "./WellnessPulse";
@@ -33,7 +33,7 @@ interface MemberExperienceProps {
   onSend: (message: string) => void;
   onCompleteAction: (plan: ActionPlan, extras?: ActionCompletion) => void;
   onToggleSpeech: () => void;
-  onLiveAvatarPromptReady: (sendPrompt: ((text: string) => void) | null) => void;
+  onLiveAvatarSpeechReady: (speech: AvatarSpeechControl | null) => void;
 }
 
 export function MemberExperience({
@@ -48,7 +48,7 @@ export function MemberExperience({
   onSend,
   onCompleteAction,
   onToggleSpeech,
-  onLiveAvatarPromptReady,
+  onLiveAvatarSpeechReady,
 }: MemberExperienceProps) {
   const [draft, setDraft] = useState("");
   const feedRef = useRef<HTMLDivElement>(null);
@@ -140,7 +140,7 @@ export function MemberExperience({
           voiceSupported={isSupported}
           interimTranscript={interimTranscript}
           onToggleListening={toggle}
-          onPromptReady={onLiveAvatarPromptReady}
+          onSpeechReady={onLiveAvatarSpeechReady}
         />
 
         <section className="conversation-panel" aria-label="Conversation with Vera">

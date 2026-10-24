@@ -22,16 +22,16 @@ Desktop browser (React)
 ├─ Member workspace
 │  ├─ Web SpeechRecognition ───────────────┐
 │  ├─ Conversation + action cards         │
-│  ├─ SpeechSynthesis + animated SVG       │
-│  └─ Optional LiveAvatar iframe           │
+│  ├─ LiveAvatar video + speech (default)  │
+│  └─ Portrait + SpeechSynthesis fallback  │
 ├─ Friction Intelligence (synthetic)       │
 └─ Same-origin API client                  │
    ├─ POST /api/chat ──────────────────────┼─> Express validation/rate limits
    │                                       │   ├─ deterministic safety route
    │                                       │   ├─ deterministic demo engine (@vera/core)
    │                                       │   └─ optional OpenAI Responses API
-   └─ POST /api/avatar/session ────────────┴─> LiveAvatar v2 embed proxy
-                                                   (explicit click only)
+   └─ POST /api/avatar/session ────────────┴─> LiveAvatar session proxy
+                                                   (automatic on member view)
 ```
 
 In production, Express also serves `dist/`; locally Vite proxies `/api` to port 8787.
@@ -55,15 +55,14 @@ Wellness device linking is synthetic and consent-bound: the UI collects which ph
 
 ## LiveAvatar boundary
 
-The browser never sees `LIVEAVATAR_API_KEY`. It explicitly requests `/api/avatar/embed`, which:
+The browser never sees `LIVEAVATAR_API_KEY`. It requests `/api/avatar/session` when the member experience opens, which:
 
 - rate-limits session creation;
 - uses a bounded upstream timeout;
 - does not return upstream error bodies;
-- extracts only the URL, not provider script;
-- accepts only HTTPS URLs on configured provider domains.
+- extracts only the short-lived session token from the provider response.
 
-The iframe is not created on page load because sessions can incur usage. The default animated SVG remains available at all times. A deeper pilot can replace FULL/embed mode with LITE mode and a managed audio bridge when synchronized OpenAI audio and custom tool overlays are required.
+LiveAvatar is the default avatar and speaks Vera's completed responses. Browser speech is stopped before a new response, and is used only when the LiveAvatar session is unavailable; the two outputs are never intentionally played together. The built-in portrait remains the visual fallback during connection and after provider failures. Sessions may incur usage. A deeper pilot can replace FULL mode with LITE mode and a managed audio bridge when synchronized OpenAI audio and custom tool overlays are required.
 
 ## Trust boundaries
 
@@ -117,4 +116,4 @@ Keep the UI/action contract stable while replacing adapters:
 3. static action plans → policy-checked orchestration and audited write-back;
 4. synthetic insights → de-identified event pipeline with cohort thresholds;
 5. browser speech → approved streaming voice stack where needed;
-6. iframe avatar → LITE audio-to-avatar bridge if synchronized custom orchestration justifies it.
+6. LiveAvatar FULL session → LITE audio-to-avatar bridge if synchronized custom orchestration justifies it.

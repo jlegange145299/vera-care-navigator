@@ -6,7 +6,7 @@
 - Confirm `/api/health` returns `status: ok`.
 - Allow microphone permission if using voice.
 - Keep browser zoom at 90–100% and use a desktop-width window.
-- If using LiveAvatar, verify account credits and the configured avatar before the session. Do not start it until the demo segment.
+- LiveAvatar connects automatically when the member experience opens. Verify account credits and the configured avatar before opening the demo; the built-in portrait and browser speech remain the fallback.
 - The deterministic avatars, speech, and showcase journeys require no provider credentials.
 
 ## 90-second judge path
@@ -73,11 +73,11 @@ Then show:
 - the roadmap from read-only pilot to governed write-back actions;
 - the dual value proposition: member outcomes and organizational learning.
 
-## Optional LiveAvatar moment
+## LiveAvatar
 
-Select **Try LiveAvatar** only when a key and tested avatar are configured.
+LiveAvatar is the default guide when a key and tested avatar are configured.
 
-> “The default avatar keeps the demo resilient. This provider-backed mode shows how the same action experience can be embodied as a real-time digital human.”
+> “The real-time digital human is the default guide, and the built-in portrait takes over if the provider is unavailable. Vera's response is routed to only one voice at a time.”
 
 If unavailable, use the visible fallback message as a strength:
 

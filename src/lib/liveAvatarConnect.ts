@@ -15,9 +15,14 @@ export async function withTimeout<T>(promise: Promise<T>, ms: number, message: s
   }
 }
 
-export function liveAvatarFailureMessage(error: unknown): "connection_failed" | "provider_unavailable" {
+export function liveAvatarFailureMessage(
+  error: unknown,
+): "connection_failed" | "provider_unavailable" | "credits_unavailable" {
   const message = error instanceof Error ? error.message.toLowerCase() : "";
   const name = error instanceof Error ? error.name.toLowerCase() : "";
+  if (message.includes("no credits") || message.includes("insufficient credits")) {
+    return "credits_unavailable";
+  }
   if (
     message.includes("timed out") ||
     message.includes("pc connection") ||

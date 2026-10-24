@@ -112,10 +112,10 @@ OpenAI API access uses a server credential (or production workload identity), no
 LIVEAVATAR_API_KEY=your_server_side_key
 LIVEAVATAR_AVATAR_ID=optional_avatar_id
 LIVEAVATAR_CONTEXT_ID=optional_context_id
-LIVEAVATAR_EMBED_ENDPOINT=https://api.liveavatar.com/v2/embeddings
+LIVEAVATAR_SESSION_TOKEN_ENDPOINT=https://api.liveavatar.com/v1/sessions/token
 ```
 
-Select **Try LiveAvatar** in the avatar panel. The session is requested only after that explicit click because provider sessions can be billable. `/api/avatar/embed` hides the key, bounds the upstream timeout, and returns only an HTTPS URL on an allowlisted provider domain. Without a key—or if the provider is unavailable—the built-in Vera avatar remains fully interactive.
+LiveAvatar starts automatically when the member experience opens, so the real-time guide is the default avatar. Provider sessions can incur usage; `/api/avatar/session` keeps the key server-side and bounds the upstream timeout. Without a key—or if the provider is unavailable—the built-in Vera portrait and browser speech take over. Only one speech output is used at a time.
 
 ### Built-in avatar
 

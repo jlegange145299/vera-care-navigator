@@ -19,7 +19,12 @@ interface AvatarStageProps {
   onToggleListening: () => void;
   compact?: boolean;
   featured?: boolean;
-  onPromptReady?: (sendPrompt: ((text: string) => void) | null) => void;
+  onSpeechReady?: (speech: AvatarSpeechControl | null) => void;
+}
+
+export interface AvatarSpeechControl {
+  speak: (text: string) => void;
+  stop: () => void;
 }
 
 const statusCopy: Record<AvatarStatus, { label: string; detail: string }> = {
@@ -33,6 +38,7 @@ const avatarErrorCopy = {
   not_configured: "LiveAvatar is ready to connect when a server key is added. The interactive demo avatar remains active.",
   provider_unavailable: "LiveAvatar is temporarily unavailable. The interactive demo avatar remains active.",
   invalid_provider_response: "LiveAvatar returned an unexpected session. The safe demo avatar remains active.",
+  credits_unavailable: "LiveAvatar has no available credits for a session. Add credits to the LiveAvatar account; the built-in avatar remains active.",
   connection_failed:
     "LiveAvatar could not open a real-time video link (firewall, VPN, or network policy). The demo avatar remains active—try another network or disable VPN.",
 };
@@ -46,7 +52,7 @@ export function AvatarStage({
   onToggleListening: _onToggleListening,
   compact = false,
   featured = false,
-  onPromptReady,
+  onSpeechReady,
 }: AvatarStageProps) {
   const copy = statusCopy[status];
   const [session, setSession] = useState<LiveAvatarSession | null>(null);
@@ -57,15 +63,19 @@ export function AvatarStage({
   const pendingSessionRef = useRef<LiveAvatarSession | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  useEffect(() => {
+    if (session && videoRef.current) session.attach(videoRef.current);
+  }, [session]);
+
   useEffect(
     () => () => {
       requestRef.current?.abort();
       pendingSessionRef.current?.stop().catch(() => undefined);
       pendingSessionRef.current = null;
       sessionRef.current?.stop();
-      onPromptReady?.(null);
+      onSpeechReady?.(null);
     },
-    [onPromptReady],
+    [onSpeechReady],
   );
 
   const resetLaunchState = (controller: AbortController) => {
@@ -119,8 +129,6 @@ export function AvatarStage({
           "LiveAvatar connection timed out while joining the video room.",
         );
 
-        if (videoRef.current) nextSession.attach(videoRef.current);
-
         if (controller.signal.aborted) {
           void nextSession.stop();
           return;
@@ -129,7 +137,17 @@ export function AvatarStage({
         pendingSessionRef.current = null;
         sessionRef.current = nextSession;
         setSession(nextSession);
-        onPromptReady?.((text) => nextSession!.message(text));
+        onSpeechReady?.({
+          speak: (text) => nextSession!.message(text),
+          stop: () => nextSession!.interrupt(),
+        });
+        nextSession.on(SessionEvent.SESSION_DISCONNECTED, () => {
+          if (sessionRef.current !== nextSession) return;
+          sessionRef.current = null;
+          setSession(null);
+          onSpeechReady?.(null);
+          setAvatarNotice(avatarErrorCopy.connection_failed);
+        });
       } else {
         setAvatarNotice(avatarErrorCopy[liveAvatar.reason ?? "provider_unavailable"]);
       }
@@ -148,11 +166,19 @@ export function AvatarStage({
     sessionRef.current?.stop();
     sessionRef.current = null;
     setSession(null);
-    onPromptReady?.(null);
+    onSpeechReady?.(null);
     setAvatarNotice(null);
   };
 
-  const liveAvatarButtonLabel = session ? "Close LiveAvatar" : isLaunching ? "Cancel" : "Try LiveAvatar";
+  useEffect(() => {
+    const launchTimer = window.setTimeout(() => {
+      void launchLiveAvatar();
+    }, 0);
+    return () => window.clearTimeout(launchTimer);
+  }, []);
+
+  const liveAvatarButtonLabel = session ? "Close LiveAvatar" : isLaunching ? "Cancel" : "Retry LiveAvatar";
+  const liveAvatarButtonTitle = "LiveAvatar is the default guide; the built-in portrait is used if it is unavailable.";
 
   const avatarStage = (
     <section
@@ -167,8 +193,7 @@ export function AvatarStage({
           className="avatar-stage__mode"
           type="button"
           onClick={session ? closeLiveAvatar : launchLiveAvatar}
-          disabled={false}
-          title="Starts a LiveAvatar session only when explicitly selected"
+          title={liveAvatarButtonTitle}
         >
           {isLaunching ? <LoaderCircle className="spin" size={13} /> : session ? <X size={13} /> : <Video size={13} />}
           {liveAvatarButtonLabel}
@@ -178,8 +203,7 @@ export function AvatarStage({
             className="avatar-stage__mode avatar-stage__mode--featured"
             type="button"
             onClick={session ? closeLiveAvatar : launchLiveAvatar}
-            disabled={false}
-            title="Starts a LiveAvatar session only when explicitly selected"
+            title={liveAvatarButtonTitle}
           >
             {isLaunching ? <LoaderCircle className="spin" size={13} /> : session ? <X size={13} /> : <Video size={13} />}
             {liveAvatarButtonLabel}
@@ -187,14 +211,9 @@ export function AvatarStage({
         )}
       </div>
 
-      {session || isLaunching ? (
+      {session ? (
         <div className="liveavatar-frame">
-          {isLaunching && !session && (
-            <span className="liveavatar-frame__label" role="status">
-              <LoaderCircle className="spin" size={13} /> Connecting…
-            </span>
-          )}
-          <video ref={videoRef} autoPlay playsInline muted aria-label="LiveAvatar session with Vera" />
+          <video ref={videoRef} autoPlay playsInline aria-label="LiveAvatar session with Vera" />
         </div>
       ) : (
         <>
@@ -212,7 +231,7 @@ export function AvatarStage({
           {avatarNotice && <div className="avatar-notice" role="status">{avatarNotice}</div>}
           {isLaunching && !session && !avatarNotice && (
             <div className="avatar-notice avatar-notice--connecting" role="status">
-              Connecting to LiveAvatar… Real-time video can take up to 30 seconds. Tap Cancel to stop.
+              Connecting to LiveAvatar… Real-time video can take up to 30 seconds. Tap Cancel to use the built-in guide.
             </div>
           )}
         </>
@@ -228,8 +247,7 @@ export function AvatarStage({
           className="header-liveavatar-button"
           type="button"
           onClick={session ? closeLiveAvatar : launchLiveAvatar}
-          disabled={false}
-          title="Starts a LiveAvatar session only when explicitly selected"
+          title={liveAvatarButtonTitle}
         >
           {isLaunching ? <LoaderCircle className="spin" size={11} /> : session ? <X size={11} /> : <Video size={11} />}
           {liveAvatarButtonLabel}

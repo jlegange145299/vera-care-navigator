@@ -124,7 +124,7 @@ export function createApp() {
     response.json(reply);
   });
 
-  // Sessions are billable, so this endpoint is called only after an explicit user click.
+  // Sessions may incur usage; keep creation requests rate-limited.
   app.post("/api/avatar/session", createRateLimiter(5), async (_request, response) => {
     const session = await createLiveAvatarSession();
     response.json({
