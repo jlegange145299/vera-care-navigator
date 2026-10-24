@@ -24,6 +24,12 @@ export interface LiveAvatarMobileSessionReply {
   reason?: "not_configured" | "provider_unavailable" | "invalid_provider_response";
 }
 
+export interface LiveAvatarWebSessionReply {
+  available: boolean;
+  sessionToken?: string;
+  reason?: "not_configured" | "provider_unavailable" | "invalid_provider_response";
+}
+
 const DEV_API = "http://localhost:8787";
 const REQUEST_TIMEOUT_MS = 8000;
 
@@ -105,6 +111,31 @@ export async function requestLiveAvatarMobileSession(
     throw new Error("Avatar API returned an incomplete mobile session");
   }
   return data as LiveAvatarMobileSessionReply;
+}
+
+export async function requestLiveAvatarWebSession(
+  signal?: AbortSignal,
+): Promise<LiveAvatarWebSessionReply> {
+  const base = apiBaseUrl();
+  if (!base) throw new Error("Vera API URL is not configured for this build");
+
+  const response = await fetch(`${base}/api/avatar/session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+    signal,
+  });
+  if (!response.ok) throw new Error(`Avatar API returned ${response.status}`);
+
+  const data = (await response.json()) as unknown;
+  if (!data || typeof data !== "object" || typeof (data as Record<string, unknown>).available !== "boolean") {
+    throw new Error("Avatar API returned an invalid response");
+  }
+  const session = data as Record<string, unknown>;
+  if (session.available && typeof session.sessionToken !== "string") {
+    throw new Error("Avatar API returned an incomplete web session");
+  }
+  return data as LiveAvatarWebSessionReply;
 }
 
 export async function stopLiveAvatarMobileSession(sessionToken: string): Promise<void> {

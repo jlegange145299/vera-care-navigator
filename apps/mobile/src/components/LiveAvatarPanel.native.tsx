@@ -184,7 +184,7 @@ export function LiveAvatarPanel({ portrait, assistantMessage }: LiveAvatarPanelP
   return (
     <View style={styles.card} accessibilityLabel="LiveAvatar guide">
       <View style={styles.media}>
-        <Image source={portrait} style={[styles.portrait, hasVideo && styles.hidden]} resizeMode="cover" />
+        <Image source={portrait} style={[styles.portrait, hasVideo && styles.hidden]} resizeMode="contain" />
         {session && RoomRenderer ? (
           <RoomRenderer
             session={session}
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.navy950,
   },
   media: {
-    height: 142,
+    height: 210,
     overflow: "hidden",
     backgroundColor: colors.navy950,
   },
@@ -235,7 +235,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     position: "absolute",
-    opacity: 0.68,
   },
   hidden: { opacity: 0 },
   caption: {
