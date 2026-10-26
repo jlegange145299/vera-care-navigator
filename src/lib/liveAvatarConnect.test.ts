@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { liveAvatarFailureMessage, withTimeout } from "./liveAvatarConnect";
 
 describe("liveAvatarFailureMessage", () => {
@@ -23,5 +23,22 @@ describe("withTimeout", () => {
     await expect(
       withTimeout(new Promise<void>(() => undefined), 20, "LiveAvatar connection timed out"),
     ).rejects.toThrow("timed out");
+  });
+
+  it("runs cleanup if the promise resolves after the timeout", async () => {
+    let resolveConnection!: () => void;
+    const lateCleanup = vi.fn();
+    const connection = new Promise<void>((resolve) => {
+      resolveConnection = resolve;
+    });
+
+    await expect(
+      withTimeout(connection, 20, "LiveAvatar connection timed out", lateCleanup),
+    ).rejects.toThrow("timed out");
+
+    resolveConnection();
+    await Promise.resolve();
+
+    expect(lateCleanup).toHaveBeenCalledOnce();
   });
 });

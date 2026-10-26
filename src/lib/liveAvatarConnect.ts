@@ -1,13 +1,25 @@
 /** LiveKit region retries can run for minutes; cap wait so the UI can recover. */
 export const LIVEAVATAR_CONNECT_TIMEOUT_MS = 32_000;
 
-export async function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+export async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  message: string,
+  onLateResolve?: (value: T) => void,
+): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let timedOut = false;
   try {
     return await Promise.race([
-      promise,
+      promise.then((value) => {
+        if (timedOut) onLateResolve?.(value);
+        return value;
+      }),
       new Promise<T>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error(message)), ms);
+        timeoutId = setTimeout(() => {
+          timedOut = true;
+          reject(new Error(message));
+        }, ms);
       }),
     ]);
   } finally {

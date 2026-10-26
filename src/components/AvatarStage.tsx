@@ -129,6 +129,11 @@ export function AvatarStage({
           nextSession.start(),
           LIVEAVATAR_CONNECT_TIMEOUT_MS,
           "LiveAvatar connection timed out while joining the video room.",
+          () => {
+            void nextSession?.stop().catch((error: unknown) => {
+              console.warn("LiveAvatar cleanup failed after a timed-out connection.", error);
+            });
+          },
         );
 
         if (controller.signal.aborted) {
